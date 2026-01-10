@@ -1,0 +1,192 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import { isAdmin } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+
+const userIsAdmin = await isAdmin();
+if (!userIsAdmin) {
+  return Astro.redirect('/');
+}
+
+// Get all planned posts and advs
+const plannedPosts = await prisma.post.findMany({
+  where: { status: 'PLANNED' },
+  orderBy: { date: 'asc' },
+  include: {
+    user: {
+      select: {
+        username: true,
+        email: true,
+      },
+    },
+  },
+});
+
+const plannedAdvs = await prisma.adv.findMany({
+  where: { status: 'PLANNED' },
+  orderBy: { date: 'asc' },
+  include: {
+    user: {
+      select: {
+        username: true,
+        email: true,
+      },
+    },
+  },
+});
+---
+
+<MainLayout title="Sistema Cron">
+  <div class="p-8">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Sistema Cron - Pubblicazioni Pianificate</h1>
+        <button
+          id="triggerCron"
+          class="px-4 py-2 bg-[#FF6B35] text-white rounded-lg hover:bg-[#ff8555] transition-colors"
+        >
+          🚀 Esegui Ora
+        </button>
+      </div>
+
+      <div id="cronResult" class="hidden mb-6 p-4 rounded-lg"></div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Planned Posts -->
+        <div class="bg-white/80 backdrop-blur-md rounded-xl p-6 shadow-lg border border-white/20">
+          <h2 class="text-xl font-bold text-gray-800 mb-4">
+            Post Pianificati ({plannedPosts.length})
+          </h2>
+          
+          {plannedPosts.length === 0 ? (
+            <p class="text-gray-500 text-sm">Nessun post pianificato</p>
+          ) : (
+            <div class="space-y-3">
+              {plannedPosts.map((post) => {
+                const isPast = new Date() >= new Date(post.date);
+                return (
+                  <div class={`p-3 rounded-lg border ${isPast ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-200'}`}>
+                    <div class="flex justify-between items-start mb-2">
+                      <h3 class="font-semibold text-sm">{post.title}</h3>
+                      {isPast && (
+                        <span class="text-xs bg-yellow-500 text-white px-2 py-1 rounded">
+                          Da pubblicare
+                        </span>
+                      )}
+                    </div>
+                    <p class="text-xs text-gray-600 mb-1">
+                      📅 {new Date(post.date).toLocaleString('it-IT')}
+                    </p>
+                    <p class="text-xs text-gray-500">
+                      👤 {post.user.username}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <!-- Planned Advs -->
+        <div class="bg-white/80 backdrop-blur-md rounded-xl p-6 shadow-lg border border-white/20">
+          <h2 class="text-xl font-bold text-gray-800 mb-4">
+            Pubblicità Pianificate ({plannedAdvs.length})
+          </h2>
+          
+          {plannedAdvs.length === 0 ? (
+            <p class="text-gray-500 text-sm">Nessuna pubblicità pianificata</p>
+          ) : (
+            <div class="space-y-3">
+              {plannedAdvs.map((adv) => {
+                const isPast = new Date() >= new Date(adv.date);
+                return (
+                  <div class={`p-3 rounded-lg border ${isPast ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-200'}`}>
+                    <div class="flex justify-between items-start mb-2">
+                      <h3 class="font-semibold text-sm">{adv.title}</h3>
+                      {isPast && (
+                        <span class="text-xs bg-yellow-500 text-white px-2 py-1 rounded">
+                          Da pubblicare
+                        </span>
+                      )}
+                    </div>
+                    <p class="text-xs text-gray-600 mb-1">
+                      📅 {new Date(adv.date).toLocaleString('it-IT')}
+                    </p>
+                    <p class="text-xs text-gray-500">
+                      👤 {adv.user.username}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div class="mt-8 bg-white/80 backdrop-blur-md rounded-xl p-6 shadow-lg border border-white/20">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">ℹ️ Informazioni</h2>
+        <div class="space-y-2 text-sm text-gray-700">
+          <p>
+            Il sistema cron controlla automaticamente ogni minuto se ci sono contenuti pianificati da pubblicare.
+          </p>
+          <p>
+            Quando la data/ora pianificata viene raggiunta, lo status viene cambiato da <code class="bg-gray-200 px-1 rounded">PLANNED</code> a <code class="bg-gray-200 px-1 rounded">PUBLISHED</code>.
+          </p>
+          <p>
+            Puoi usare il pulsante "Esegui Ora" per triggerare manualmente il processo di pubblicazione.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const triggerButton = document.getElementById('triggerCron') as HTMLButtonElement;
+    const resultDiv = document.getElementById('cronResult') as HTMLDivElement;
+
+    triggerButton.addEventListener('click', async () => {
+      triggerButton.disabled = true;
+      triggerButton.textContent = '⏳ Elaborazione...';
+      
+      try {
+        const response = await fetch('/api/cron/trigger', {
+          method: 'POST',
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          resultDiv.className = 'mb-6 p-4 rounded-lg bg-green-100 border border-green-300';
+          resultDiv.innerHTML = `
+            <p class="font-semibold text-green-800">✅ ${data.message}</p>
+            <p class="text-sm text-green-700 mt-1">
+              Post pubblicati: ${data.publishedPosts} | Pubblicità pubblicate: ${data.publishedAdvs}
+            </p>
+          `;
+          resultDiv.classList.remove('hidden');
+          
+          // Reload page after 2 seconds to show updated data
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        } else {
+          resultDiv.className = 'mb-6 p-4 rounded-lg bg-red-100 border border-red-300';
+          resultDiv.innerHTML = `
+            <p class="font-semibold text-red-800">❌ Errore: ${data.error}</p>
+            ${data.details ? `<p class="text-sm text-red-700 mt-1">${data.details}</p>` : ''}
+          `;
+          resultDiv.classList.remove('hidden');
+        }
+      } catch (error) {
+        resultDiv.className = 'mb-6 p-4 rounded-lg bg-red-100 border border-red-300';
+        resultDiv.innerHTML = `
+          <p class="font-semibold text-red-800">❌ Errore di rete</p>
+        `;
+        resultDiv.classList.remove('hidden');
+      } finally {
+        triggerButton.disabled = false;
+        triggerButton.textContent = '🚀 Esegui Ora';
+      }
+    });
+  </script>
+</MainLayout>

@@ -1,0 +1,130 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Setup dipendenze",
+      "description": "Installare e configurare tutte le dipendenze: Zod, Tailwind, shadcn, Prisma, GraphQL, React",
+      "completed": true
+    },
+    {
+      "id": 2,
+      "title": "Creazione struttura cartelle",
+      "description": "Creare tutte le cartelle definite nell'architettura: entities, data, services, components, utils",
+      "completed": true
+    },
+    {
+      "id": 3,
+      "title": "Creazione componenti layout",
+      "description": "Creare componenti Header, Footer, Menu in src/components/layouts",
+      "completed": true
+    },
+    {
+      "id": 4,
+      "title": "Creazione componenti form",
+      "description": "Creare componenti form riutilizzabili in src/components/form, incluso autocomplete per Category/Tag con suggerimenti dinamici",
+      "completed": true
+    },
+    {
+      "id": 5,
+      "title": "Creazione componenti generici",
+      "description": "Creare componenti generici come Modal e altri in src/components",
+      "completed": true
+    },
+    {
+      "id": 6,
+      "title": "Creazione pagina demo componenti",
+      "description": "Creare pagina /demo per visualizzare la libreria di tutti i componenti (solo in dev mode)",
+      "completed": true
+    },
+    {
+      "id": 7,
+      "title": "Configurazione Prisma",
+      "description": "Setup Prisma con schema base, configurazione SQLite per dev e PostgreSQL per produzione",
+      "completed": true
+    },
+    {
+      "id": 8,
+      "title": "Definizione entità con Zod",
+      "description": "Creare gli schema Zod per User, Category, Tag, Post, Adv e CronJob in src/entities",
+      "completed": true
+    },
+    {
+      "id": 9,
+      "title": "Creazione schema Prisma",
+      "description": "Definire i modelli User, Category, Tag, Post, Adv, CronJob e le relative relazioni nel schema Prisma",
+      "completed": true
+    },
+    {
+      "id": 10,
+      "title": "Setup utente hardcoded",
+      "description": "Creare seed per utente coccus (davide.cocco@mosai.co, role admin) e implementare sessione automatica senza login",
+      "completed": true
+    },
+    {
+      "id": 11,
+      "title": "Setup GraphQL endpoint",
+      "description": "Configurare l'endpoint GraphQL in pages/api/graphql",
+      "completed": true
+    },
+    {
+      "id": 12,
+      "title": "Creazione layer data",
+      "description": "Implementare funzioni di astrazione per CRUD di User, Category, Tag, Post e Adv in src/data",
+      "completed": true
+    },
+    {
+      "id": 13,
+      "title": "Setup utils",
+      "description": "Creare utilità riutilizzabili in src/utils (validazioni, helper, ecc.)",
+      "completed": true
+    },
+    {
+      "id": 14,
+      "title": "Creazione pagine base CMS",
+      "description": "Implementare le pagine principali del CMS in src/pages",
+      "completed": false
+    },
+    {
+      "id": 15,
+      "title": "Creazione pagine CRUD Category",
+      "description": "Creare pagine per lista, creazione, modifica e cancellazione delle categorie con relative funzioni data layer",
+      "completed": true
+    },
+    {
+      "id": 16,
+      "title": "Creazione pagine CRUD Tag",
+      "description": "Creare pagine per lista, creazione, modifica e cancellazione dei tag con relative funzioni data layer",
+      "completed": true
+    },
+    {
+      "id": 17,
+      "title": "Creazione pagine CRUD Post",
+      "description": "Creare pagine per lista, creazione, modifica, cancellazione e gestione revisioni dei post con relative funzioni data layer",
+      "completed": true
+    },
+    {
+      "id": 18,
+      "title": "Creazione pagine CRUD Adv",
+      "description": "Creare pagine per lista, creazione, modifica e cancellazione degli advertising con relative funzioni data layer",
+      "completed": true
+    },
+    {
+      "id": 19,
+      "title": "Implementazione controlli permessi",
+      "description": "Implementare logica per cui solo admin può modificare user_id in Post e Adv",
+      "completed": false
+    },
+    {
+      "id": 20,
+      "title": "Implementazione sistema cron",
+      "description": "Creare servizio cron per esecuzione automatica job di pubblicazione Post/Adv pianificati",
+      "completed": false
+    },
+    {
+      "id": 21,
+      "title": "Integrazione CronJob con Post/Adv",
+      "description": "Implementare creazione automatica CronJob quando Post/Adv vengono impostati con status planned",
+      "completed": false
+    }
+  ]
+}

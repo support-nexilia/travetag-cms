@@ -1,0 +1,144 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  email     String   @unique
+  role      Role     @default(EDITOR)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  posts     Post[]
+  advs      Adv[]
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  posts       PostCategory[]
+}
+
+model Tag {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  posts       PostTag[]
+}
+
+model Post {
+  id          String      @id @default(uuid())
+  title       String
+  slug        String      @unique
+  description String?
+  content     String?
+  date        DateTime
+  status      PostStatus  @default(DRAFT)
+  parentId    String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  userId      String
+  
+  user       User           @relation(fields: [userId], references: [id])
+  parent     Post?          @relation("PostRevisions", fields: [parentId], references: [id])
+  revisions  Post[]         @relation("PostRevisions")
+  categories PostCategory[]
+  tags       PostTag[]
+}
+
+model Adv {
+  id        String     @id @default(uuid())
+  title     String
+  subtitle  String?
+  link      String?
+  date      DateTime
+  status    AdvStatus  @default(DRAFT)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  userId    String
+  
+  user      User       @relation(fields: [userId], references: [id])
+}
+
+model CronJob {
+  id          String        @id @default(uuid())
+  taskType    CronTaskType
+  entityId    String
+  scheduledAt DateTime
+  status      CronStatus    @default(PENDING)
+  executedAt  DateTime?
+  errorMessage String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+// Junction tables for many-to-many relationships
+model PostCategory {
+  postId     String
+  categoryId String
+  
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  @@id([postId, categoryId])
+}
+
+model PostTag {
+  postId String
+  tagId  String
+  
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@id([postId, tagId])
+}
+
+// Enums
+enum Role {
+  ADMIN
+  EDITOR
+}
+
+enum PostStatus {
+  PUBLISHED
+  DELETED
+  REVISION
+  DRAFT
+  PLANNED
+}
+
+enum AdvStatus {
+  PUBLISHED
+  DELETED
+  DRAFT
+  PLANNED
+}
+
+enum CronStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum CronTaskType {
+  PUBLISH_POST
+  PUBLISH_ADV
+}
