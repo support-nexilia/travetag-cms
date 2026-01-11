@@ -1,0 +1,155 @@
+erDiagram
+    Author {
+        string _id PK
+        string name
+        string nickname
+        string email UK
+        string image
+        string background_image
+        string bio
+        boolean is_admin
+        boolean is_tour_leader
+        string social "Array of Social objects"
+        string languages "Array of strings"
+        datetime created_at
+        datetime updated_at
+    }
+
+    Article {
+        string _id PK
+        string author_id FK
+        string title
+        string subtitle
+        string description
+        string image "SizedImage object"
+        string video_full "VideoFull object"
+        string slug UK
+        string type "REMEMBER or BOOK_NOW"
+        string tag_ids "Array of ObjectIds"
+        int category_id
+        boolean published
+        string tour_leader_id "FK BOOKING only"
+        datetime published_date
+        datetime created_at
+        datetime updated_at
+        datetime date "REMEMBER only"
+        string description_HTML "REMEMBER only"
+        string indicative_price "REMEMBER only"
+        datetime trip_start_at "BOOKING only"
+        datetime trip_end_at "BOOKING only"
+        string trip_start_at_description "BOOKING only"
+        string trip_end_at_description "BOOKING only"
+        string stripe_product_id "BOOKING only"
+        string stripe_price_id "BOOKING only"
+        string trip_in_a_nutshell_title "BOOKING only"
+        string trip_in_a_nutshell_body_HTML "BOOKING only"
+        string highlights_title "BOOKING only"
+        string highlights_body_HTML "BOOKING only"
+        string additional_information_title "BOOKING only"
+        string additional_information_body_HTML "BOOKING only"
+        string how_we_move_title "BOOKING only"
+        string how_we_move_body_HTML "BOOKING only"
+        string where_we_sleep_title "BOOKING only"
+        string where_we_sleep_body_HTML "BOOKING only"
+        string not_included_in_the_price_title "BOOKING only"
+        string not_included_in_the_price_body_HTML "BOOKING only"
+        string included_in_the_price_title "BOOKING only"
+        string included_in_the_price_body_HTML "BOOKING only"
+        string type_of_trip_title "BOOKING only"
+        string type_of_trip_body_HTML "BOOKING only"
+        string type_of_trip_items "Map object BOOKING only"
+        string itinerary_image "SizedImage BOOKING only"
+        int max_booking_num "BOOKING only"
+        float price_adults "BOOKING only"
+        float price_children "BOOKING only"
+        float price_couples "BOOKING only"
+        float price_newborns "BOOKING only"
+        boolean travelers_adults_allowed "BOOKING only"
+        int travelers_adults_min "BOOKING only"
+        int travelers_adults_max "BOOKING only"
+        boolean travelers_children_allowed "BOOKING only"
+        int travelers_children_min "BOOKING only"
+        int travelers_children_max "BOOKING only"
+        boolean travelers_couples_allowed "BOOKING only"
+        int travelers_couples_min "BOOKING only"
+        int travelers_couples_max "BOOKING only"
+        boolean travelers_newborns_allowed "BOOKING only"
+        int travelers_newborns_min "BOOKING only"
+        int travelers_newborns_max "BOOKING only"
+        string optional_products "Array of Product - BOOKING only"
+        string itinerary_items "Array of ItineraryItem - BOOKING only"
+    }
+
+    Product {
+        string id
+        string title
+        string description
+        boolean refundable
+        boolean optional
+        float price_adults
+        float price_children
+        float price_couples
+        float price_newborns
+    }
+
+    ItineraryItem {
+        int order
+        string title
+        string content "HTML description"
+    }
+
+    Social {
+        string type "instagram, facebook, etc"
+        string url
+    }
+
+    VideoFull {
+        string url
+        string url_mp4
+        float duration
+        int width
+        int height
+        boolean public
+        boolean podcast
+        string meride_embed_id
+    }
+
+    SizedImage {
+        string xs "URL extra small"
+        string sm "URL small"
+        string md "URL medium"
+        string lg "URL large"
+        string xl "URL extra large"
+        string source "URL original"
+    }
+
+    Category {
+        int id PK
+        string name
+        string slug UK
+        string description
+        datetime created_at
+        datetime updated_at
+    }
+
+    Tag {
+        string _id PK
+        string name
+        string slug UK
+        string description
+        string image "SizedImage object"
+        datetime created_at
+        datetime updated_at
+    }
+
+    Author ||--o{ Article : "author_id"
+    Author ||--o{ Article : "tour_leader_id"
+    Article }o--o{ Category : "category_id"
+    Article }o--o{ Tag : "tag_ids array"
+    Article ||--|| VideoFull : "embeds video_full"
+    Article ||--|| SizedImage : "embeds image"
+    Article ||--|| SizedImage : "embeds itinerary_image"
+    Article ||--|{ Product : "embeds optional_products array"
+    Article ||--|{ ItineraryItem : "embeds itinerary_items array"
+    Author ||--|{ Social : "embeds social array"
+    Tag ||--|| SizedImage : "embeds image"

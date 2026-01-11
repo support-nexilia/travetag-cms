@@ -4,10 +4,34 @@
 
 - **Astro** - SSR framework with island architecture
 - **React** - Interactive UI components with client-side hydration
-- **Prisma** - Type-safe ORM (PostgreSQL for production, SQLite for development)
+- **MongoDB** - NoSQL document database with native driver
 - **GraphQL** - API layer for external clients consuming CMS content
 - **Zod** - Schema validation and type inference
 - **Tailwind CSS + shadcn/ui** - Styling and component library
+
+## Database
+
+### MongoDB
+- **Native MongoDB Node.js Driver** - Direct database access without ORM overhead
+- **Document-oriented** - Perfect for nested structures (prices, itinerary_items, etc.)
+- **Flexible schema** - Easy evolution without migrations
+- **Collections**: `authors`, `articles`, `tags`, `categories`, `pages`, `advs`, `app_settings`
+
+### Data Layer Pattern
+```typescript
+// src/data/article.ts
+import { getDb } from '@/lib/mongodb';
+
+export async function getAllArticles() {
+  const db = await getDb();
+  return db.collection('articles').find({}).toArray();
+}
+
+export async function getArticleById(id: string) {
+  const db = await getDb();
+  return db.collection('articles').findOne({ _id: new ObjectId(id) });
+}
+```
 
 ## API
 
@@ -41,37 +65,64 @@ Components organized by type:
 ### `src/utils`
 Reusable utilities and logic.
 
-## Entities
+## Entities (MongoDB Collections)
 
-### User
-- `id` (UUID) - Unique identifier
-- `username` (string, unique) - User's username
-- `email` (string, unique) - User's email
-- `role` (enum) - Role: `admin`, `editor`
+### Author
+- `_id` (ObjectId) - Unique identifier
+- `name` (string) - Full name
+- `nickname` (string, optional) - Nickname
+- `email` (string, unique) - Email address
+- `image` (SizedImage/String) - Profile image
+- `background_image` (SizedImage/String) - Background image
+- `bio` (string, optional) - Biography
+- `is_admin` (boolean) - Admin flag
+- `is_tour_leader` (boolean, optional) - Tour leader flag
+- `social` (array) - Social network links [{ type, url }]
+- `languages` (array) - Spoken languages ["it", "en", "es"]
 - `created_at` (datetime) - Creation date
 - `updated_at` (datetime) - Last update date
-- Relationship: One-to-Many with Post
+- Index: `email` (unique)
 
-### Category
-- `id` (UUID) - Unique identifier
-- `name` (string) - Category name
-- `slug` (string, unique) - Unique slug auto-generated from name
-- `description` (string, optional) - Category description
+### Article
+- `_id` (ObjectId) - Unique identifier
+- `author_id` (ObjectId) - Reference to Author
+- `title` (string) - Article title
+- `subtitle` (string, optional) - Subtitle
+- `description` (string) - Description
+- `image` (SizedImage/String) - Main image
+- `video_full` (VideoFull/String) - Video object or URL
+- `slug` (string, unique) - URL-friendly slug
+- `type` (string) - "REMEMBER" or "BOOK_NOW"
+- `tag_ids` (array[ObjectId]) - Tag references
+- `category_id` (number) - Category reference
+- `published` (boolean) - Publication status
+- `published_date` (datetime) - Publication date
+- **REMEMBER fields**: `date`, `description_HTML`, `indicative_price`
+- **BOOKING fields**: trip dates, prices (flat structure), travelers config, sections, itinerary_items (embedded array), optional_products (embedded array)
 - `created_at` (datetime) - Creation date
 - `updated_at` (datetime) - Last update date
-- Relationship: Many-to-Many with Post
+- Indexes: `slug` (unique), `author_id`, `type`, `published`, `published_date`, `tag_ids` (multikey)
 
 ### Tag
-- `id` (UUID) - Unique identifier
+- `_id` (ObjectId) - Unique identifier
 - `name` (string) - Tag name
 - `slug` (string, unique) - Unique slug auto-generated from name
 - `description` (string, optional) - Tag description
 - `created_at` (datetime) - Creation date
 - `updated_at` (datetime) - Last update date
-- Relationship: Many-to-Many with Post
+- Index: `slug` (unique)
+
+### Category
+- `id` (number) - Integer identifier (compatibility with Firestore)
+- `name` (string) - Category name
+- `slug` (string, unique) - Unique slug auto-generated from name
+- `description` (string, optional) - Category description
+- `created_at` (datetime) - Creation date
+- `updated_at` (datetime) - Last update date
+- Index: `slug` (unique)
 
 ### Adv
-- `id` (UUID) - Unique identifier
+- `_id` (ObjectId) - Unique identifier
 - `title` (string) - Advertising title
 - `subtitle` (string, optional) - Subtitle
 - `link` (string, optional) - Destination URL
@@ -79,13 +130,13 @@ Reusable utilities and logic.
 - `status` (enum) - Status: `published`, `deleted`, `planned`, `draft`
 - `created_at` (datetime) - Creation date
 - `updated_at` (datetime) - Last update date
-- `user_id` (UUID) - Advertisement author
-- Relationship: Many-to-One with User
+- `author_id` (ObjectId) - Advertisement author
+- Index: `status`, `date`
 
 **Adv Notes**:
 - Future date → `status = 'planned'`
 - Cron system automatically publishes when scheduled date is reached
-- Only admins can modify `user_id` (assign to other users)
+- Only admins can modify `author_id` (assign to other users)
 
 ## Cron System
 
@@ -124,27 +175,12 @@ The cron system manages automatic publication of scheduled Posts and Advs.
 
 **Note**: In production, configure a system cron job or scheduled service (e.g., vercel-cron) to periodically call `/api/cron/trigger`.
 
-### Post
-- `id` (UUID) - Unique identifier
-- `title` (string) - Post title
-- `slug` (string, unique) - Unique slug auto-generated from title
-- `description` (string, optional) - Short description
-- `content` (string, optional) - Full post content
-- `date` (datetime, editable) - Publication date (can be future)
-- `status` (enum) - Status: `published`, `deleted`, `revision`, `draft`, `planned`
-- `parent_id` (UUID, nullable) - Main post ID (NULL for main posts, set for revisions)
-- `created_at` (datetime) - Creation date
-- `updated_at` (datetime) - Last update date
-- `user_id` (UUID) - Post author
-- Relationship: Many-to-One with User
-- Relationship: Self-relation One-to-Many (one post can have many revisions)
-- Relationship: Many-to-Many with Category
-- Relationship: Many-to-Many with Tag
+## Data Model Reference
 
-**Revision Management**:
-- Main post: `status = 'published'/'draft'/'planned'`, `parent_id = NULL`
-- Revisions: `status = 'revision'`, `parent_id` points to main post
-- Each modification creates a new revision maintaining complete history
+See detailed model documentation:
+- **Full Model**: `docs/new-model-description.md` - Complete MongoDB schema with all fields
+- **Visual Diagram**: `docs/new-model-diagram.mermaid` - ER diagram of collections and relationships
+- **Original Firestore Model**: `docs/migration_models.md` - Reference from Flutter app
 - Query revisions: `WHERE parent_id = X AND status = 'revision' ORDER BY created_at DESC`
 
 **Post Notes**:
