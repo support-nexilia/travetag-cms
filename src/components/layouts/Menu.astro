@@ -1,6 +1,6 @@
 ---
 // Sidebar Menu component
-import { LayoutDashboard, FileText, FolderOpen, Tag, Megaphone, Clock } from 'lucide-react';
+import { LayoutDashboard, FileText, FolderOpen, Tag, Megaphone, Clock, Users } from 'lucide-react';
 
 interface Props {
   currentPath?: string;
@@ -10,7 +10,8 @@ const { currentPath } = Astro.props;
 
 const menuItems = [
   { href: '/', label: 'Dashboard', Icon: LayoutDashboard },
-  { href: '/posts', label: 'Post', Icon: FileText },
+  { href: '/authors', label: 'Autori', Icon: Users },
+  { href: '/articles', label: 'Articoli', Icon: FileText },
   { href: '/categories', label: 'Categorie', Icon: FolderOpen },
   { href: '/tags', label: 'Tag', Icon: Tag },
   { href: '/advs', label: 'Advertising', Icon: Megaphone },

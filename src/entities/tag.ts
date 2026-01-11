@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { ObjectId } from 'mongodb';
 
 export const TagSchema = z.object({
-  id: z.string().uuid(),
+  _id: z.instanceof(ObjectId),
   name: z.string().min(1).max(100),
   slug: z.string().min(1),
   description: z.string().max(500).optional(),
@@ -9,15 +10,15 @@ export const TagSchema = z.object({
   updatedAt: z.date(),
 });
 
-export const TagCreateSchema = TagSchema.omit({
-  id: true,
+export const CreateTagSchema = TagSchema.omit({
+  _id: true,
   slug: true,
   createdAt: true,
   updatedAt: true,
 });
 
 export const UpdateTagSchema = TagSchema.omit({
-  id: true,
+  _id: true,
   createdAt: true,
   updatedAt: true,
 }).partial();

@@ -1,0 +1,429 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import { getArticleById } from '@/data/article';
+import { getAllAuthors, getTourLeaders } from '@/data/author';
+
+const { id } = Astro.params;
+if (!id) return Astro.redirect('/articles');
+
+const article = await getArticleById(id);
+if (!article) return Astro.redirect('/articles');
+
+const authors = await getAllAuthors();
+const tourLeaders = await getTourLeaders();
+
+const isBooking = article.type === 'BOOK_NOW';
+const isRemember = article.type === 'REMEMBER';
+---
+
+<MainLayout title={`Modifica ${article.title}`}>
+  <div class="p-8">
+    <div class="max-w-5xl mx-auto">
+      <h1 class="text-3xl font-bold text-gray-800 mb-6">Modifica Articolo</h1>
+      
+      <form id="articleForm" class="bg-white/80 backdrop-blur-md rounded-xl p-6 shadow-lg border border-white/20 space-y-6">
+        <input type="hidden" id="articleId" value={article._id.toString()} />
+        <input type="hidden" id="articleType" value={article.type} />
+        
+        <!-- Info tipo articolo (non modificabile) -->
+        <div class="bg-gray-100 p-4 rounded-lg">
+          <p class="text-sm text-gray-600">
+            Tipo Articolo: <span class="font-semibold">{article.type === 'BOOK_NOW' ? 'Book Now (Viaggio)' : 'Remember (Articolo)'}</span>
+          </p>
+        </div>
+
+        <!-- Campi Base -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="col-span-2">
+            <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+              Titolo *
+            </label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              value={article.title}
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+            />
+          </div>
+
+          <div class="col-span-2">
+            <label for="subtitle" class="block text-sm font-medium text-gray-700 mb-2">
+              Sottotitolo
+            </label>
+            <input
+              type="text"
+              id="subtitle"
+              name="subtitle"
+              value={article.subtitle || ''}
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+            />
+          </div>
+
+          <div>
+            <label for="author_id" class="block text-sm font-medium text-gray-700 mb-2">
+              Autore *
+            </label>
+            <select
+              id="author_id"
+              name="author_id"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+            >
+              {authors.map((author) => (
+                <option 
+                  value={author._id.toString()}
+                  selected={author._id.toString() === article.author_id.toString()}
+                >
+                  {author.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label for="slug" class="block text-sm font-medium text-gray-700 mb-2">
+              Slug *
+            </label>
+            <input
+              type="text"
+              id="slug"
+              name="slug"
+              value={article.slug}
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+            Descrizione Breve *
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            required
+            rows="3"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+          >{article.description}</textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="image" class="block text-sm font-medium text-gray-700 mb-2">
+              URL Immagine
+            </label>
+            <input
+              type="url"
+              id="image"
+              name="image"
+              value={article.image || ''}
+              placeholder="https://..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+            />
+            {article.image && (
+              <img src={article.image} alt="Preview" class="mt-2 w-32 h-32 rounded-lg object-cover" />
+            )}
+          </div>
+
+          <div>
+            <label for="video_full" class="block text-sm font-medium text-gray-700 mb-2">
+              URL Video
+            </label>
+            <input
+              type="url"
+              id="video_full"
+              name="video_full"
+              value={article.video_full || ''}
+              placeholder="https://..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="published_date" class="block text-sm font-medium text-gray-700 mb-2">
+              Data Pubblicazione *
+            </label>
+            <input
+              type="date"
+              id="published_date"
+              name="published_date"
+              value={new Date(article.published_date).toISOString().split('T')[0]}
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+            />
+          </div>
+
+          <div>
+            <label class="flex items-center gap-2 mt-8">
+              <input
+                type="checkbox"
+                id="published"
+                name="published"
+                checked={article.published}
+                class="w-4 h-4 text-[#FF6B35] border-gray-300 rounded focus:ring-[#FF6B35]"
+              />
+              <span class="text-sm text-gray-700">Pubblicato</span>
+            </label>
+          </div>
+        </div>
+
+        {isRemember && 'date' in article && (
+          <div class="border-t pt-4 space-y-4">
+            <h3 class="text-lg font-semibold text-gray-700">Campi Remember</h3>
+            
+            <div>
+              <label for="date" class="block text-sm font-medium text-gray-700 mb-2">
+                Data Evento
+              </label>
+              <input
+                type="date"
+                id="date"
+                name="date"
+                value={article.date ? new Date(article.date).toISOString().split('T')[0] : ''}
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+              />
+            </div>
+
+            <div>
+              <label for="indicative_price" class="block text-sm font-medium text-gray-700 mb-2">
+                Prezzo Indicativo
+              </label>
+              <input
+                type="text"
+                id="indicative_price"
+                name="indicative_price"
+                value={article.indicative_price || ''}
+                placeholder="es: €500-800"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+              />
+            </div>
+
+            <div>
+              <label for="description_HTML" class="block text-sm font-medium text-gray-700 mb-2">
+                Descrizione HTML
+              </label>
+              <textarea
+                id="description_HTML"
+                name="description_HTML"
+                rows="6"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35] font-mono text-sm"
+              >{article.description_HTML || ''}</textarea>
+            </div>
+          </div>
+        )}
+
+        {isBooking && 'trip_start_at' in article && (
+          <div class="border-t pt-4 space-y-4">
+            <h3 class="text-lg font-semibold text-gray-700">Campi Book Now</h3>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="trip_start_at" class="block text-sm font-medium text-gray-700 mb-2">
+                  Data Inizio Viaggio
+                </label>
+                <input
+                  type="date"
+                  id="trip_start_at"
+                  name="trip_start_at"
+                  value={article.trip_start_at ? new Date(article.trip_start_at).toISOString().split('T')[0] : ''}
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+                />
+              </div>
+
+              <div>
+                <label for="trip_end_at" class="block text-sm font-medium text-gray-700 mb-2">
+                  Data Fine Viaggio
+                </label>
+                <input
+                  type="date"
+                  id="trip_end_at"
+                  name="trip_end_at"
+                  value={article.trip_end_at ? new Date(article.trip_end_at).toISOString().split('T')[0] : ''}
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label for="tour_leader_id" class="block text-sm font-medium text-gray-700 mb-2">
+                Tour Leader
+              </label>
+              <select
+                id="tour_leader_id"
+                name="tour_leader_id"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+              >
+                <option value="">Stesso dell'autore</option>
+                {tourLeaders.map((leader) => (
+                  <option 
+                    value={leader._id.toString()}
+                    selected={article.tour_leader_id?.toString() === leader._id.toString()}
+                  >
+                    {leader.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div class="grid grid-cols-4 gap-4">
+              <div>
+                <label for="price_adults" class="block text-sm font-medium text-gray-700 mb-2">
+                  Prezzo Adulti
+                </label>
+                <input
+                  type="number"
+                  id="price_adults"
+                  name="price_adults"
+                  value={article.price_adults || ''}
+                  step="0.01"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+                />
+              </div>
+              <div>
+                <label for="price_children" class="block text-sm font-medium text-gray-700 mb-2">
+                  Prezzo Bambini
+                </label>
+                <input
+                  type="number"
+                  id="price_children"
+                  name="price_children"
+                  value={article.price_children || ''}
+                  step="0.01"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+                />
+              </div>
+              <div>
+                <label for="price_couples" class="block text-sm font-medium text-gray-700 mb-2">
+                  Prezzo Coppie
+                </label>
+                <input
+                  type="number"
+                  id="price_couples"
+                  name="price_couples"
+                  value={article.price_couples || ''}
+                  step="0.01"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+                />
+              </div>
+              <div>
+                <label for="price_newborns" class="block text-sm font-medium text-gray-700 mb-2">
+                  Prezzo Neonati
+                </label>
+                <input
+                  type="number"
+                  id="price_newborns"
+                  name="price_newborns"
+                  value={article.price_newborns || ''}
+                  step="0.01"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label for="max_booking_num" class="block text-sm font-medium text-gray-700 mb-2">
+                Numero Massimo Prenotazioni
+              </label>
+              <input
+                type="number"
+                id="max_booking_num"
+                name="max_booking_num"
+                value={article.max_booking_num || ''}
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+              />
+            </div>
+          </div>
+        )}
+
+        <div class="flex gap-3 pt-4 border-t">
+          <button
+            type="submit"
+            class="flex-1 px-4 py-2 bg-[#FF6B35] text-white rounded-lg hover:bg-[#ff8555] transition-colors"
+          >
+            Salva Modifiche
+          </button>
+          <a
+            href="/articles"
+            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+          >
+            Annulla
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('articleForm') as HTMLFormElement;
+    const articleId = (document.getElementById('articleId') as HTMLInputElement).value;
+    const articleType = (document.getElementById('articleType') as HTMLInputElement).value;
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      
+      const baseData = {
+        type: articleType,
+        title: formData.get('title') as string,
+        subtitle: (formData.get('subtitle') as string) || undefined,
+        description: formData.get('description') as string,
+        slug: formData.get('slug') as string,
+        author_id: formData.get('author_id') as string,
+        image: (formData.get('image') as string) || undefined,
+        video_full: (formData.get('video_full') as string) || undefined,
+        published: formData.get('published') === 'on',
+        published_date: new Date(formData.get('published_date') as string),
+      };
+      
+      let data: any = baseData;
+      
+      if (articleType === 'REMEMBER') {
+        data = {
+          ...baseData,
+          date: formData.get('date') ? new Date(formData.get('date') as string) : undefined,
+          indicative_price: (formData.get('indicative_price') as string) || undefined,
+          description_HTML: (formData.get('description_HTML') as string) || undefined,
+        };
+      } else {
+        data = {
+          ...baseData,
+          trip_start_at: formData.get('trip_start_at') ? new Date(formData.get('trip_start_at') as string) : undefined,
+          trip_end_at: formData.get('trip_end_at') ? new Date(formData.get('trip_end_at') as string) : undefined,
+          tour_leader_id: (formData.get('tour_leader_id') as string) || undefined,
+          price_adults: formData.get('price_adults') ? parseFloat(formData.get('price_adults') as string) : undefined,
+          price_children: formData.get('price_children') ? parseFloat(formData.get('price_children') as string) : undefined,
+          price_couples: formData.get('price_couples') ? parseFloat(formData.get('price_couples') as string) : undefined,
+          price_newborns: formData.get('price_newborns') ? parseFloat(formData.get('price_newborns') as string) : undefined,
+          max_booking_num: formData.get('max_booking_num') ? parseInt(formData.get('max_booking_num') as string) : undefined,
+        };
+      }
+      
+      try {
+        const response = await fetch(`/api/articles/${articleId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+        
+        if (response.ok) {
+          window.location.href = '/articles';
+        } else {
+          const error = await response.json();
+          alert('Errore: ' + (error.message || 'Impossibile aggiornare l\'articolo'));
+          console.error('Error details:', error);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Errore durante l\'aggiornamento dell\'articolo');
+      }
+    });
+  </script>
+</MainLayout>

@@ -1,51 +1,51 @@
-import { prisma } from '@/lib/prisma';
-import type { Tag } from '@/entities';
+import { ObjectId } from 'mongodb';
+import { collections } from '@/lib/mongodb';
+import type { Tag, CreateTag, UpdateTag } from '@/entities';
 import { generateUniqueSlug } from '@/utils';
 
-export async function getAllTags() {
-  return await prisma.tag.findMany({
-    orderBy: { name: 'asc' },
-    include: {
-      _count: {
-        select: { posts: true },
-      },
-    },
-  });
+export async function getAllTags(): Promise<Tag[]> {
+  const tags = await collections.tags.find({}).sort({ name: 1 }).toArray();
+  return tags as Tag[];
 }
 
-export async function getTagById(id: string) {
-  return await prisma.tag.findUnique({
-    where: { id },
-    include: {
-      posts: {
-        include: {
-          post: true,
-        },
-      },
-    },
-  });
+export async function getTagById(id: string): Promise<Tag | null> {
+  if (!ObjectId.isValid(id)) return null;
+  const tag = await collections.tags.findOne({ _id: new ObjectId(id) });
+  return tag as Tag | null;
 }
 
-export async function createTag(data: Omit<Tag, 'id' | 'slug' | 'createdAt' | 'updatedAt'>) {
-  const existingSlugs = (await prisma.tag.findMany({ select: { slug: true } })).map((t) => t.slug);
+export async function getTagBySlug(slug: string): Promise<Tag | null> {
+  const tag = await collections.tags.findOne({ slug });
+  return tag as Tag | null;
+}
+
+export async function createTag(data: CreateTag): Promise<Tag> {
+  const existingSlugs = (await collections.tags.find({}, { projection: { slug: 1 } }).toArray()).map((t) => t.slug);
   const slug = generateUniqueSlug(data.name, existingSlugs);
   
-  return await prisma.tag.create({
-    data: {
-      ...data,
-      slug,
-    },
-  });
+  const now = new Date();
+  const newTag = {
+    ...data,
+    slug,
+    createdAt: now,
+    updatedAt: now,
+  };
+  
+  const result = await collections.tags.insertOne(newTag);
+  return { ...newTag, _id: result.insertedId } as Tag;
 }
 
-export async function updateTag(id: string, data: Partial<Omit<Tag, 'id' | 'createdAt' | 'updatedAt'>>) {
+export async function updateTag(id: string, data: UpdateTag): Promise<Tag | null> {
+  if (!ObjectId.isValid(id)) return null;
+  
+  let updateData: any = { ...data };
+  
   // If slug is provided or name changed, regenerate slug
-  let updateData = { ...data };
   if (data.slug || data.name) {
-    const existingSlugs = (await prisma.tag.findMany({ 
-      where: { id: { not: id } },
-      select: { slug: true } 
-    })).map((t) => t.slug);
+    const existingSlugs = (await collections.tags.find(
+      { _id: { $ne: new ObjectId(id) } },
+      { projection: { slug: 1 } }
+    ).toArray()).map((t) => t.slug);
     
     if (data.slug) {
       updateData.slug = generateUniqueSlug(data.slug, existingSlugs);
@@ -54,14 +54,28 @@ export async function updateTag(id: string, data: Partial<Omit<Tag, 'id' | 'crea
     }
   }
   
-  return await prisma.tag.update({
-    where: { id },
-    data: updateData,
-  });
+  updateData.updatedAt = new Date();
+  
+  const result = await collections.tags.findOneAndUpdate(
+    { _id: new ObjectId(id) },
+    { $set: updateData },
+    { returnDocument: 'after' }
+  );
+  
+  return result as Tag | null;
 }
 
-export async function deleteTag(id: string) {
-  return await prisma.tag.delete({
-    where: { id },
+export async function deleteTag(id: string): Promise<boolean> {
+  if (!ObjectId.isValid(id)) return false;
+  
+  const result = await collections.tags.deleteOne({ _id: new ObjectId(id) });
+  return result.deletedCount === 1;
+}
+
+export async function getArticleCountByTag(id: string): Promise<number> {
+  if (!ObjectId.isValid(id)) return 0;
+  
+  return await collections.articles.countDocuments({
+    tag_ids: new ObjectId(id)
   });
 }

@@ -1,0 +1,49 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import { getArticleById } from '@/data/article';
+import { getAllAuthors, getTourLeaders } from '@/data/author';
+import { ArticleForm } from '@/components/form/ArticleForm';
+
+const { id } = Astro.params;
+if (!id) return Astro.redirect('/articles');
+
+const article = await getArticleById(id);
+if (!article) return Astro.redirect('/articles');
+
+const authors = await getAllAuthors();
+const tourLeaders = await getTourLeaders();
+
+// Convert ObjectId to string for React component
+const articleData = {
+  ...article,
+  _id: article._id.toString(),
+  author_id: article.author_id.toString(),
+  tour_leader_id: article.tour_leader_id?.toString(),
+};
+
+const authorsData = authors.map(a => ({
+  _id: a._id.toString(),
+  name: a.name,
+}));
+
+const tourLeadersData = tourLeaders.map(tl => ({
+  _id: tl._id.toString(),
+  name: tl.name,
+}));
+---
+
+<MainLayout title={`Modifica ${article.title}`}>
+  <div class="p-8">
+    <div class="max-w-5xl mx-auto">
+      <h1 class="text-3xl font-bold text-gray-800 mb-6">Modifica Articolo</h1>
+      
+      <ArticleForm
+        client:load
+        article={articleData}
+        authors={authorsData}
+        tourLeaders={tourLeadersData}
+        mode="edit"
+      />
+    </div>
+  </div>
+</MainLayout>

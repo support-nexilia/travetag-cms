@@ -1,10 +1,16 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
-import { getAllCategories } from '@/data/category';
+import { getAllCategories, getArticleCountByCategory } from '@/data/category';
 import { Pencil } from 'lucide-react';
 import { DeleteButton } from '@/components/ui/DeleteButton';
 
 const categories = await getAllCategories();
+const categoriesWithCount = await Promise.all(
+  categories.map(async (category) => ({
+    ...category,
+    articleCount: await getArticleCountByCategory(category._id.toString())
+  }))
+);
 ---
 
 <MainLayout title="Categorie">
@@ -25,12 +31,12 @@ const categories = await getAllCategories();
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrizione</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Post</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Articoli</th>
             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Azioni</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
-          {categories.map((category) => (
+          {categoriesWithCount.map((category) => (
             <tr class="hover:bg-gray-50/50 transition-colors">
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900">{category.name}</div>
@@ -39,18 +45,18 @@ const categories = await getAllCategories();
                 <div class="text-sm text-gray-600">{category.description || '-'}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span class="text-sm text-gray-500">{category._count.posts}</span>
+                <span class="text-sm text-gray-500">{category.articleCount}</span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="flex gap-2 justify-end">
                   <a
-                    href={`/categories/edit/${category.id}`}
+                    href={`/categories/edit/${category._id.toString()}`}
                     class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
                   >
                     <Pencil className="w-4 h-4" />
                     Modifica
                   </a>
-                  <DeleteButton client:load id={category.id} entityType="category" entityName={category.name} />
+                  <DeleteButton client:load id={category._id.toString()} entityType="category" entityName={category.name} />
                 </div>
               </td>
             </tr>

@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { ObjectId } from 'mongodb';
 
 export const CategorySchema = z.object({
-  id: z.string().uuid(),
+  _id: z.instanceof(ObjectId),
   name: z.string().min(1).max(100),
   slug: z.string().min(1),
   description: z.string().max(500).optional(),
@@ -9,15 +10,15 @@ export const CategorySchema = z.object({
   updatedAt: z.date(),
 });
 
-export const CategoryCreateSchema = CategorySchema.omit({
-  id: true,
+export const CreateCategorySchema = CategorySchema.omit({
+  _id: true,
   slug: true,
   createdAt: true,
   updatedAt: true,
 });
 
 export const UpdateCategorySchema = CategorySchema.omit({
-  id: true,
+  _id: true,
   createdAt: true,
   updatedAt: true,
 }).partial();
