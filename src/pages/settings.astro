@@ -1,0 +1,317 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import { getAppSettings, initializeAppSettings } from '@/data/app-settings';
+import { SectionsSelector } from '@/components/form/SectionsSelector';
+import { FormFeedback } from '@/components/FormFeedback';
+
+let settings = await getAppSettings();
+if (!settings) {
+  settings = await initializeAppSettings();
+}
+
+const availableSections = [
+  { value: 'main', label: 'Principale' },
+  { value: 'adv', label: 'Advertising' },
+  { value: 'chat', label: 'Chat' },
+  { value: 'articles', label: 'Articoli' },
+  { value: 'categories', label: 'Categorie' },
+  { value: 'tags', label: 'Tag' },
+];
+---
+
+<MainLayout title="Impostazioni">
+  <div class="p-8">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-3xl font-bold text-gray-800 mb-6">Impostazioni Applicazione</h1>
+      
+      <form id="settingsForm" class="bg-white/80 backdrop-blur-md rounded-xl p-6 shadow-lg border border-white/20 space-y-6">
+        
+        {/* Configurazione Generale */}
+        <div class="border-b pb-6">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Configurazione Generale</h2>
+          
+          <div class="grid grid-cols-1 gap-4">
+            <div>
+              <label for="minimum_supported_version" class="block text-sm font-medium text-gray-700 mb-2">
+                Versione Minima Supportata
+              </label>
+              <input
+                type="number"
+                id="minimum_supported_version"
+                name="minimum_supported_version"
+                value={settings.minimum_supported_version || 0}
+                min="0"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+              />
+              <p class="text-xs text-gray-500 mt-1">Versione minima dell'app mobile richiesta per funzionare</p>
+            </div>
+
+            <div>
+              <label for="traveltaggers_description" class="block text-sm font-medium text-gray-700 mb-2">
+                Descrizione Traveltaggers
+              </label>
+              <textarea
+                id="traveltaggers_description"
+                name="traveltaggers_description"
+                rows="4"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+              >{settings.traveltaggers_description || ''}</textarea>
+              <p class="text-xs text-gray-500 mt-1">Testo descrittivo per la sezione Traveltaggers</p>
+            </div>
+
+            <div>
+              <label for="video_full" class="block text-sm font-medium text-gray-700 mb-2">
+                URL Video Principale
+              </label>
+              <input
+                type="url"
+                id="video_full"
+                name="video_full"
+                value={typeof settings.video_full === 'string' ? settings.video_full : settings.video_full?.url || ''}
+                placeholder="https://youtube.com/watch?v=..."
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+              />
+              <p class="text-xs text-gray-500 mt-1">Video principale mostrato nell'app</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Politiche Rimborso */}
+        <div class="border-b pb-6">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Politiche Rimborso</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="refund_within_hours" class="block text-sm font-medium text-gray-700 mb-2">
+                Rimborso Completo Entro (ore)
+              </label>
+              <input
+                type="number"
+                id="refund_within_hours"
+                name="refund_within_hours"
+                value={settings.refund_within_hours || ''}
+                min="0"
+                placeholder="24"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+              />
+              <p class="text-xs text-gray-500 mt-1">Ore entro cui garantire rimborso completo</p>
+            </div>
+
+            <div>
+              <label for="partial_refund_within_hours_of_departure" class="block text-sm font-medium text-gray-700 mb-2">
+                Rimborso Parziale Prima Partenza (ore)
+              </label>
+              <input
+                type="number"
+                id="partial_refund_within_hours_of_departure"
+                name="partial_refund_within_hours_of_departure"
+                value={settings.partial_refund_within_hours_of_departure || ''}
+                min="0"
+                placeholder="48"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+              />
+              <p class="text-xs text-gray-500 mt-1">Ore prima della partenza per rimborso parziale</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Range Età */}
+        <div class="border-b pb-6">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Range Età Viaggiatori</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+              <h3 class="text-md font-medium text-gray-700">Neonati</h3>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label for="newborns_age_min" class="block text-sm text-gray-600 mb-1">
+                    Età Minima
+                  </label>
+                  <input
+                    type="number"
+                    id="newborns_age_min"
+                    name="newborns_age_min"
+                    value={settings.newborns_age?.min || 0}
+                    min="0"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+                  />
+                </div>
+                <div>
+                  <label for="newborns_age_max" class="block text-sm text-gray-600 mb-1">
+                    Età Massima
+                  </label>
+                  <input
+                    type="number"
+                    id="newborns_age_max"
+                    name="newborns_age_max"
+                    value={settings.newborns_age?.max || 2}
+                    min="0"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <h3 class="text-md font-medium text-gray-700">Bambini</h3>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label for="children_age_min" class="block text-sm text-gray-600 mb-1">
+                    Età Minima
+                  </label>
+                  <input
+                    type="number"
+                    id="children_age_min"
+                    name="children_age_min"
+                    value={settings.children_age?.min || 3}
+                    min="0"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+                  />
+                </div>
+                <div>
+                  <label for="children_age_max" class="block text-sm text-gray-600 mb-1">
+                    Età Massima
+                  </label>
+                  <input
+                    type="number"
+                    id="children_age_max"
+                    name="children_age_max"
+                    value={settings.children_age?.max || 12}
+                    min="0"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Ordine Sezioni Home */}
+        <div class="border-b pb-6">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Ordine Sezioni Home</h2>
+          
+          <SectionsSelector
+            client:load
+            name="main_sections_order"
+            label="Ordine Sezioni (trascina per riordinare)"
+            defaultValue={settings.main_sections_order || ['main', 'adv', 'chat']}
+            availableOptions={availableSections}
+          />
+          <p class="text-xs text-gray-500 mt-2">Ordine delle sezioni nella home dell'app mobile. Usa le frecce per cambiare l'ordine.</p>
+        </div>
+
+        <div class="flex gap-3">
+          <button
+            type="submit"
+            class="flex-1 px-4 py-2 bg-[#FF6B35] text-white rounded-lg hover:bg-[#ff8555] transition-colors"
+          >
+            Salva Impostazioni
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <FormFeedback client:only="react" isLoading={false} success={null} error={null} />
+
+  <script is:inline>
+    const form = document.getElementById('settingsForm');
+    let isLoading = false;
+    
+    // Get root element for React re-render
+    function updateFeedback(props) {
+      const event = new CustomEvent('formFeedback', { detail: props });
+      window.dispatchEvent(event);
+    }
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (isLoading) return;
+      isLoading = true;
+      updateFeedback({ isLoading: true, success: null, error: null });
+      
+      const formData = new FormData(form);
+      
+      // Parse main_sections_order from array inputs
+      const sectionsOrder = [];
+      let i = 0;
+      while (formData.has(`main_sections_order[${i}]`)) {
+        sectionsOrder.push(formData.get(`main_sections_order[${i}]`));
+        i++;
+      }
+      
+      const data = {
+        minimum_supported_version: parseInt(formData.get('minimum_supported_version')) || 0,
+        main_sections_order: sectionsOrder.length > 0 ? sectionsOrder : ['main', 'adv', 'chat'],
+      };
+      
+      if (formData.get('video_full')) {
+        data.video_full = formData.get('video_full');
+      }
+      if (formData.get('traveltaggers_description')) {
+        data.traveltaggers_description = formData.get('traveltaggers_description');
+      }
+      if (formData.get('refund_within_hours')) {
+        data.refund_within_hours = parseInt(formData.get('refund_within_hours'));
+      }
+      if (formData.get('partial_refund_within_hours_of_departure')) {
+        data.partial_refund_within_hours_of_departure = parseInt(formData.get('partial_refund_within_hours_of_departure'));
+      }
+
+      // Age ranges
+      data.newborns_age = {
+        min: parseInt(formData.get('newborns_age_min')) || 0,
+        max: parseInt(formData.get('newborns_age_max')) || 2,
+      };
+      data.children_age = {
+        min: parseInt(formData.get('children_age_min')) || 3,
+        max: parseInt(formData.get('children_age_max')) || 12,
+      };
+      
+      try {
+        const response = await fetch('/api/settings', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+        
+        isLoading = false;
+        
+        if (response.ok) {
+          updateFeedback({ 
+            isLoading: false, 
+            success: { 
+              show: true, 
+              message: 'Impostazioni salvate con successo!'
+            }, 
+            error: null 
+          });
+        } else {
+          const error = await response.json();
+          updateFeedback({ 
+            isLoading: false, 
+            success: null, 
+            error: { 
+              show: true, 
+              message: error.message || 'Errore durante il salvataggio'
+            }
+          });
+        }
+      } catch (error) {
+        console.error(error);
+        isLoading = false;
+        updateFeedback({ 
+          isLoading: false, 
+          success: null, 
+          error: { 
+            show: true, 
+            message: 'Errore durante il salvataggio delle impostazioni'
+          }
+        });
+      }
+    });
+  </script>
+</MainLayout>

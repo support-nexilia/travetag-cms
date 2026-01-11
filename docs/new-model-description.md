@@ -342,13 +342,257 @@ Oggetto per gestire immagini responsive con formati multipli.
 
 ---
 
+## Step 3: Adv (Advertising)
+
+### Adv Collection
+Collezione per gestire gli annunci pubblicitari e contenuti promozionali.
+
+**Struttura documento:**
+```javascript
+{
+  _id: ObjectId,
+  author_id: ObjectId,  // ref → Author
+  title: String,
+  subtitle: String?,
+  description: String?,
+  image: Object?,  // SizedImage - PRIMA IMPLEMENTAZIONE: String
+  link: String?,  // URL destinazione click
+  type: String?,  // "banner" | "popup" | "sidebar" | "newsletter"
+  position: String?,  // "home" | "article" | "category" | "tag"
+  priority: Number?,  // 0-10, maggiore = più priorità
+  impressions: Number?,  // Contatore visualizzazioni
+  clicks: Number?,  // Contatore click
+  published: Boolean,  // default: false
+  published_date: Date?,
+  start_date: Date?,  // Data inizio pubblicazione
+  end_date: Date?,  // Data fine pubblicazione
+  created_at: Date,
+  updated_at: Date
+}
+```
+
+**Indici:**
+- `author_id`: per query advs per autore
+- `published`: per advs pubblicati
+- `type`: per filtrare per tipo
+- `position`: per posizionamento
+- `start_date`, `end_date`: per scheduling
+- `priority`: per ordinamento
+
+**Enum types:**
+
+**Adv.type:**
+- `banner` - Banner pubblicitario
+- `popup` - Popup/Modal
+- `sidebar` - Barra laterale
+- `newsletter` - Newsletter
+
+**Adv.position:**
+- `home` - Homepage
+- `article` - Pagina articolo
+- `category` - Pagina categoria
+- `tag` - Pagina tag
+- `search` - Risultati ricerca
+
+**Regole di business:**
+- Solo utenti con `is_admin: true` possono creare/modificare Adv
+- Solo utenti con `is_admin: true` possono modificare il campo `author_id`
+- Advs con `start_date` futuro non vengono mostrati
+- Advs con `end_date` passato non vengono mostrati
+- Ordinamento per `priority` (desc) poi per `published_date` (desc)
+
+---
+
+## Step 4: AppSettings (Configurazione Applicazione)
+
+### AppSettings Collection
+Singolo documento per configurazioni globali dell'applicazione.
+
+**Struttura documento:**
+```javascript
+{
+  _id: ObjectId,  // Solo un documento con _id fisso: "app_settings"
+  
+  // Informazioni sito
+  site_name: String,  // "TravelTag"
+  site_description: String?,
+  site_url: String,  // "https://traveltag.it"
+  site_logo: Object?,  // SizedImage - PRIMA IMPLEMENTAZIONE: String
+  site_favicon: String?,
+  
+  // SEO
+  meta_title: String?,
+  meta_description: String?,
+  meta_keywords: [String]?,
+  og_image: Object?,  // SizedImage - PRIMA IMPLEMENTAZIONE: String
+  
+  // Social
+  social_facebook: String?,
+  social_instagram: String?,
+  social_twitter: String?,
+  social_youtube: String?,
+  social_linkedin: String?,
+  social_tiktok: String?,
+  
+  // Contatti
+  contact_email: String?,
+  contact_phone: String?,
+  contact_address: String?,
+  
+  // Analytics
+  google_analytics_id: String?,
+  google_tag_manager_id: String?,
+  facebook_pixel_id: String?,
+  
+  // Stripe
+  stripe_publishable_key: String?,
+  stripe_secret_key: String?,  // encrypted
+  stripe_webhook_secret: String?,  // encrypted
+  
+  // Email
+  smtp_host: String?,
+  smtp_port: Number?,
+  smtp_user: String?,
+  smtp_password: String?,  // encrypted
+  email_from: String?,
+  email_from_name: String?,
+  
+  // Funzionalità
+  enable_comments: Boolean?,  // default: false
+  enable_newsletter: Boolean?,  // default: false
+  enable_booking: Boolean?,  // default: true
+  maintenance_mode: Boolean?,  // default: false
+  
+  // Testi standard
+  privacy_policy_html: String?,
+  terms_and_conditions_html: String?,
+  cookie_policy_html: String?,
+  
+  // Newsletter
+  newsletter_provider: String?,  // "mailchimp" | "sendgrid" | "custom"
+  newsletter_api_key: String?,  // encrypted
+  newsletter_list_id: String?,
+  
+  // Impostazioni booking
+  booking_confirmation_email_template: String?,
+  booking_cancellation_hours: Number?,  // ore minime prima cancellazione
+  booking_min_travelers: Number?,  // minimo viaggiatori per conferma
+  
+  created_at: Date,
+  updated_at: Date
+}
+```
+
+**Note:**
+- Esiste **un solo documento** in questa collection con `_id` fisso
+- Campi sensibili (password, api_key) devono essere **encrypted** prima del salvataggio
+- Solo utenti con `is_admin: true` possono modificare AppSettings
+- In CMS, form dedicato in sezione "Impostazioni" accessibile solo ad admin
+
+**Validazione:**
+- `site_url` deve essere URL valido
+- Email devono essere in formato valido
+- `booking_cancellation_hours` deve essere >= 0
+- Campi Stripe opzionali ma se `enable_booking: true` devono essere compilati
+
+---
+
+## Step 5: Notification (Push Notifications)
+
+### Notification Collection
+Collezione per gestire le notifiche push dell'app.
+
+**Struttura documento:**
+```javascript
+{
+  _id: ObjectId,
+  
+  // Contenuto notifica
+  title: String,              // Titolo notifica
+  body: String,               // Corpo/messaggio notifica
+  image: String?,             // URL immagine (opzionale)
+  
+  // Target
+  target_type: String,        // "all" | "user" | "segment"
+  target_user_ids: [String]?, // Array di user IDs (se target_type = "user")
+  target_segment: String?,    // Segmento utenti (se target_type = "segment")
+                              // Esempi: "tour_leaders", "admins", "active_users"
+  
+  // Deep linking / azione
+  action_type: String?,       // "article" | "author" | "category" | "tag" | "url" | "none"
+  action_id: String?,         // ID risorsa (es. article_id, author_id, etc.)
+  action_url: String?,        // URL custom (se action_type = "url")
+  
+  // Scheduling
+  scheduled_at: Date?,        // Data/ora programmata invio (null = invio immediato)
+  sent_at: Date?,             // Data/ora effettivo invio
+  
+  // Metadata
+  status: String,             // "draft" | "scheduled" | "sent" | "failed"
+  sent_count: Number,         // Numero notifiche inviate con successo
+  failed_count: Number,       // Numero notifiche fallite
+  
+  // Autore
+  author_id: ObjectId,        // Riferimento all'autore che ha creato la notifica
+  
+  // Timestamp
+  created_at: Date,
+  updated_at: Date
+}
+```
+
+**Indici:**
+- `status`: per filtrare bozze/programmate/inviate
+- `scheduled_at`: per job di invio programmato
+- `author_id`: per filtrare notifiche per autore
+- `created_at`: per ordinamento cronologico
+
+**Enum Values:**
+```javascript
+// target_type
+"all"       // Invia a tutti gli utenti
+"user"      // Invia a utenti specifici
+"segment"   // Invia a segmento utenti
+
+// action_type
+"article"   // Apri articolo specifico
+"author"    // Apri profilo autore
+"category"  // Apri categoria
+"tag"       // Apri tag
+"url"       // Apri URL custom
+"none"      // Nessuna azione (solo notifica)
+
+// status
+"draft"     // Bozza
+"scheduled" // Programmata
+"sent"      // Inviata
+"failed"    // Fallita
+```
+
+**Regole di business:**
+- Solo admin possono creare/modificare notifiche
+- Notifiche "sent" non possono essere modificate
+- `sent_at` viene impostato automaticamente al momento dell'invio
+- `sent_count` e `failed_count` vengono aggiornati dopo l'invio
+- Se `scheduled_at` è null, la notifica viene inviata immediatamente
+- Se `scheduled_at` è nel futuro, la notifica viene programmata
+
+**Note implementazione:**
+- L'invio effettivo sarà gestito tramite Firebase Cloud Messaging (FCM)
+- Il CMS gestisce solo la creazione/programmazione delle notifiche
+- Un job periodico o webhook invierà le notifiche programmate
+- Gli `fcm_token` degli utenti sono memorizzati nella collezione `users`
+
+---
+
 ## Prossimi Step
 1. ✅ Author + Article base (APPIATTITO)
 2. ✅ Category + Tag (collections con references many-to-many)
-3. ⏳ Page + PageSection (embedded sections)
-4. ⏳ Adv (Advertising)
-5. ⏳ AppSettings (singolo documento)
-6. ⏳ PurchaseItem + RememberItem (gestione acquisti - fase successiva)
+3. ✅ Adv (Advertising)
+4. ✅ AppSettings (singolo documento)
+5. ✅ Notification (notifiche push)
+6. ⏳ Page + PageSection (embedded sections)
+7. ⏳ PurchaseItem + RememberItem (gestione acquisti - fase successiva)
 
 ---
 

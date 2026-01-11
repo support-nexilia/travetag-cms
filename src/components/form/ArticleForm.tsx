@@ -48,138 +48,6 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
   const isBookNow = articleType === 'BOOK_NOW';
   const isRemember = articleType === 'REMEMBER';
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-
-    const data: any = {
-      type: articleType,
-      title: formData.get('title'),
-      subtitle: formData.get('subtitle') || undefined,
-      excerpt: formData.get('excerpt'),
-      slug: formData.get('slug'),
-      author_id: formData.get('author_id'),
-      tour_leader_id: formData.get('tour_leader_id') || formData.get('author_id'),
-      status: formData.get('status'),
-      published_date: new Date(formData.get('published_date') as string),
-      image_hero: formData.get('image_hero') || undefined,
-      video_full: formData.get('video_full') || undefined,
-    };
-
-    // Content sections (common to both types)
-    for (let i = 1; i <= 4; i++) {
-      const title = formData.get(`title_section_${i}`);
-      const body = formData.get(`body_HTML_section_${i}`);
-      if (title || body) {
-        data[`title_section_${i}`] = title || undefined;
-        data[`body_HTML_section_${i}`] = body || undefined;
-      }
-    }
-
-    if (isRemember) {
-      data.date = formData.get('date') ? new Date(formData.get('date') as string) : undefined;
-      data.indicative_price = formData.get('indicative_price') || undefined;
-    }
-
-    if (isBookNow) {
-      // Basic BOOK_NOW fields
-      data.duration_days = parseInt(formData.get('duration_days') as string) || undefined;
-      data.difficulty = formData.get('difficulty') || undefined;
-      data.min_people = parseInt(formData.get('min_people') as string) || undefined;
-      data.max_people = parseInt(formData.get('max_people') as string) || undefined;
-      
-      // Dates
-      data.start_date = formData.get('start_date') ? new Date(formData.get('start_date') as string) : undefined;
-      data.end_date = formData.get('end_date') ? new Date(formData.get('end_date') as string) : undefined;
-      data.deadline_date = formData.get('deadline_date') ? new Date(formData.get('deadline_date') as string) : undefined;
-      
-      // Travelers configuration
-      data.travelers_adults_allowed = formData.get('travelers_adults_allowed') === 'on';
-      data.travelers_adults_min = parseInt(formData.get('travelers_adults_min') as string) || 0;
-      data.travelers_adults_max = parseInt(formData.get('travelers_adults_max') as string) || 0;
-      data.price_adults = parseFloat(formData.get('price_adults') as string) || undefined;
-      
-      data.travelers_children_allowed = formData.get('travelers_children_allowed') === 'on';
-      data.travelers_children_min = parseInt(formData.get('travelers_children_min') as string) || 0;
-      data.travelers_children_max = parseInt(formData.get('travelers_children_max') as string) || 0;
-      data.price_children = parseFloat(formData.get('price_children') as string) || undefined;
-      
-      data.travelers_couples_allowed = formData.get('travelers_couples_allowed') === 'on';
-      data.travelers_couples_min = parseInt(formData.get('travelers_couples_min') as string) || 0;
-      data.travelers_couples_max = parseInt(formData.get('travelers_couples_max') as string) || 0;
-      data.price_couples = parseFloat(formData.get('price_couples') as string) || undefined;
-      
-      data.travelers_newborns_allowed = formData.get('travelers_newborns_allowed') === 'on';
-      data.travelers_newborns_min = parseInt(formData.get('travelers_newborns_min') as string) || 0;
-      data.travelers_newborns_max = parseInt(formData.get('travelers_newborns_max') as string) || 0;
-      data.price_newborns = parseFloat(formData.get('price_newborns') as string) || undefined;
-      
-      // Itinerary
-      const itineraryCount = parseInt(formData.get('itinerary_count') as string) || 0;
-      data.itinerary_items = [];
-      for (let i = 0; i < itineraryCount; i++) {
-        const order = formData.get(`itinerary_order_${i}`);
-        const title = formData.get(`itinerary_title_${i}`);
-        const content = formData.get(`itinerary_content_${i}`);
-        if (title) {
-          data.itinerary_items.push({
-            order: parseInt(order as string),
-            title,
-            content: content || '',
-          });
-        }
-      }
-      
-      // Optional products
-      const productsCount = parseInt(formData.get('products_count') as string) || 0;
-      data.optional_products = [];
-      for (let i = 0; i < productsCount; i++) {
-        const id = formData.get(`product_id_${i}`);
-        const title = formData.get(`product_title_${i}`);
-        if (id && title) {
-          data.optional_products.push({
-            id,
-            title,
-            description: formData.get(`product_description_${i}`) || '',
-            price_adults: formData.get(`product_price_adults_${i}`) ? parseFloat(formData.get(`product_price_adults_${i}`) as string) : undefined,
-            price_children: formData.get(`product_price_children_${i}`) ? parseFloat(formData.get(`product_price_children_${i}`) as string) : undefined,
-            price_couples: formData.get(`product_price_couples_${i}`) ? parseFloat(formData.get(`product_price_couples_${i}`) as string) : undefined,
-            price_newborns: formData.get(`product_price_newborns_${i}`) ? parseFloat(formData.get(`product_price_newborns_${i}`) as string) : undefined,
-            refundable: formData.get(`product_refundable_${i}`) === 'on',
-            optional: formData.get(`product_optional_${i}`) === 'on',
-          });
-        }
-      }
-      
-      // BOOK_NOW specific text fields
-      data.additional_information = formData.get('additional_information') || undefined;
-      data.how_we_move = formData.get('how_we_move') || undefined;
-      data.where_we_sleep = formData.get('where_we_sleep') || undefined;
-      data.type_of_trip = formData.get('type_of_trip') || undefined;
-    }
-
-    try {
-      const url = mode === 'edit' ? `/api/articles/${article?._id}` : '/api/articles';
-      const method = mode === 'edit' ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
-        window.location.href = '/articles';
-      } else {
-        const error = await response.json();
-        alert('Errore: ' + (error.message || 'Impossibile salvare l\'articolo'));
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Errore durante il salvataggio dell\'articolo');
-    }
-  };
-
   // Auto-generate slug from title
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (mode === 'new') {
@@ -194,7 +62,10 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white/80 backdrop-blur-md rounded-xl p-6 shadow-lg border border-white/20 space-y-6">
+    <form id="articleForm" className="bg-white/80 backdrop-blur-md rounded-xl p-6 shadow-lg border border-white/20 space-y-6">
+      
+      {/* Hidden field for type */}
+      <input type="hidden" name="type" value={articleType} />
       
       {/* Tipo Articolo */}
       {mode === 'new' && (

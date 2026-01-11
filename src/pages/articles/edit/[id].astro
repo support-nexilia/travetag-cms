@@ -3,6 +3,7 @@ import MainLayout from '@/layouts/MainLayout.astro';
 import { getArticleById } from '@/data/article';
 import { getAllAuthors, getTourLeaders } from '@/data/author';
 import { ArticleForm } from '@/components/form/ArticleForm';
+import FormFeedback from '@/components/FormFeedback';
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect('/articles');
@@ -33,6 +34,7 @@ const tourLeadersData = tourLeaders.map(tl => ({
 ---
 
 <MainLayout title={`Modifica ${article.title}`}>
+  <FormFeedback client:load isLoading={false} success={null} error={null} />
   <div class="p-8">
     <div class="max-w-5xl mx-auto">
       <h1 class="text-3xl font-bold text-gray-800 mb-6">Modifica Articolo</h1>
@@ -47,3 +49,91 @@ const tourLeadersData = tourLeaders.map(tl => ({
     </div>
   </div>
 </MainLayout>
+
+<script define:vars={{ articleId: id }}>
+  let isLoading = false;
+
+  function updateFeedback(props) {
+    const event = new CustomEvent('formFeedback', { detail: props });
+    window.dispatchEvent(event);
+  }
+
+  // Handle form submission - use capturing phase to catch React form events
+  window.addEventListener('submit', async (e) => {
+    const form = e.target;
+    if (form.id === 'articleForm') {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      console.log('Form submit intercepted');
+      
+      if (isLoading) return;
+      isLoading = true;
+      updateFeedback({ isLoading: true, success: null, error: null });
+      
+      const formData = new FormData(form);
+      const data = {};
+      
+      // Process form data
+      formData.forEach((value, key) => {
+        // Handle nested array fields like itinerary_items[0][title]
+        const nestedMatch = key.match(/^(.+)\[(\d+)\]\[(.+)\]$/);
+        if (nestedMatch) {
+          const fieldName = nestedMatch[1];
+          const index = parseInt(nestedMatch[2]);
+          const subField = nestedMatch[3];
+          
+          if (!data[fieldName]) data[fieldName] = [];
+          if (!data[fieldName][index]) data[fieldName][index] = {};
+          data[fieldName][index][subField] = value;
+        }
+        // Handle simple array fields like tag_ids[0]
+        else if (key.includes('[')) {
+          const match = key.match(/^(.+)\[(\d+)\]$/);
+          if (match) {
+            const fieldName = match[1];
+            if (!data[fieldName]) data[fieldName] = [];
+            data[fieldName].push(value);
+          }
+        } else {
+          data[key] = value;
+        }
+      });
+      
+      console.log('Sending data:', data);
+      
+      try {
+        const response = await fetch(`/api/articles/${articleId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        
+        if (response.ok) {
+          isLoading = false;
+          updateFeedback({ 
+            isLoading: false, 
+            success: { show: true, message: 'Articolo aggiornato con successo!' }, 
+            error: null 
+          });
+        } else {
+          const error = await response.json();
+          isLoading = false;
+          updateFeedback({ 
+            isLoading: false, 
+            success: null, 
+            error: { show: true, message: error.message || 'Impossibile aggiornare l\'articolo' } 
+          });
+        }
+      } catch (error) {
+        console.error('Error updating article:', error);
+        isLoading = false;
+        updateFeedback({ 
+          isLoading: false, 
+          success: null, 
+          error: { show: true, message: 'Errore durante l\'aggiornamento dell\'articolo' } 
+        });
+      }
+    }
+  }, true); // Use capture phase
+</script>

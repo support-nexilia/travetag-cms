@@ -93,7 +93,7 @@ export function ProductsRepeater({ initialProducts = [], travelersConfig }: Prop
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Tipo Prodotto</label>
                   <select
-                    name={`product_id_${index}`}
+                    name={`optional_products[${index}][id]`}
                     value={product.id}
                     onChange={(e) => updateProduct(index, 'id', e.target.value)}
                     className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
@@ -110,7 +110,7 @@ export function ProductsRepeater({ initialProducts = [], travelersConfig }: Prop
                   <label className="block text-xs text-gray-600 mb-1">Titolo</label>
                   <input
                     type="text"
-                    name={`product_title_${index}`}
+                    name={`optional_products[${index}][title]`}
                     value={product.title}
                     onChange={(e) => updateProduct(index, 'title', e.target.value)}
                     placeholder="Nome del prodotto"
@@ -123,7 +123,7 @@ export function ProductsRepeater({ initialProducts = [], travelersConfig }: Prop
                 <label className="block text-xs text-gray-600 mb-1">Descrizione</label>
                 <input
                   type="text"
-                  name={`product_description_${index}`}
+                  name={`optional_products[${index}][description]`}
                   value={product.description}
                   onChange={(e) => updateProduct(index, 'description', e.target.value)}
                   placeholder="Descrizione del prodotto"
@@ -138,7 +138,7 @@ export function ProductsRepeater({ initialProducts = [], travelersConfig }: Prop
                     <label className="block text-xs text-gray-600 mb-1">Prezzo Adulti €</label>
                     <input
                       type="number"
-                      name={`product_price_adults_${index}`}
+                      name={`optional_products[${index}][price_adults]`}
                       value={product.price_adults || ''}
                       onChange={(e) =>
                         updateProduct(index, 'price_adults', parseFloat(e.target.value))
@@ -154,7 +154,7 @@ export function ProductsRepeater({ initialProducts = [], travelersConfig }: Prop
                     <label className="block text-xs text-gray-600 mb-1">Prezzo Bambini €</label>
                     <input
                       type="number"
-                      name={`product_price_children_${index}`}
+                      name={`optional_products[${index}][price_children]`}
                       value={product.price_children || ''}
                       onChange={(e) =>
                         updateProduct(index, 'price_children', parseFloat(e.target.value))
@@ -170,7 +170,7 @@ export function ProductsRepeater({ initialProducts = [], travelersConfig }: Prop
                     <label className="block text-xs text-gray-600 mb-1">Prezzo Coppie €</label>
                     <input
                       type="number"
-                      name={`product_price_couples_${index}`}
+                      name={`optional_products[${index}][price_couples]`}
                       value={product.price_couples || ''}
                       onChange={(e) =>
                         updateProduct(index, 'price_couples', parseFloat(e.target.value))
@@ -186,7 +186,7 @@ export function ProductsRepeater({ initialProducts = [], travelersConfig }: Prop
                     <label className="block text-xs text-gray-600 mb-1">Prezzo Neonati €</label>
                     <input
                       type="number"
-                      name={`product_price_newborns_${index}`}
+                      name={`optional_products[${index}][price_newborns]`}
                       value={product.price_newborns || ''}
                       onChange={(e) =>
                         updateProduct(index, 'price_newborns', parseFloat(e.target.value))
@@ -202,7 +202,7 @@ export function ProductsRepeater({ initialProducts = [], travelersConfig }: Prop
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    name={`product_refundable_${index}`}
+                    name={`optional_products[${index}][refundable]`}
                     checked={product.refundable}
                     onChange={(e) => updateProduct(index, 'refundable', e.target.checked)}
                     className="w-4 h-4"
@@ -213,7 +213,7 @@ export function ProductsRepeater({ initialProducts = [], travelersConfig }: Prop
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    name={`product_optional_${index}`}
+                    name={`optional_products[${index}][optional]`}
                     checked={product.optional}
                     onChange={(e) => updateProduct(index, 'optional', e.target.checked)}
                     className="w-4 h-4"

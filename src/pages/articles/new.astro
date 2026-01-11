@@ -2,12 +2,14 @@
 import MainLayout from '@/layouts/MainLayout.astro';
 import { getAllAuthors, getTourLeaders } from '@/data/author';
 import { ArticleForm } from '@/components/form/ArticleForm';
+import FormFeedback from '@/components/FormFeedback';
 
 const authors = await getAllAuthors();
 const tourLeaders = await getTourLeaders();
 ---
 
 <MainLayout title="Nuovo Articolo">
+  <FormFeedback client:load isLoading={false} success={null} error={null} />
   <div class="p-8">
     <div class="max-w-5xl mx-auto">
       <h1 class="text-3xl font-bold text-gray-800 mb-6">Nuovo Articolo</h1>
@@ -23,19 +25,41 @@ const tourLeaders = await getTourLeaders();
 </MainLayout>
 
 <script>
+  let isLoading = false;
+
+  function updateFeedback(props: { isLoading: boolean; success: { show: boolean; message: string } | null; error: { show: boolean; message: string } | null }) {
+    const event = new CustomEvent('formFeedback', { detail: props });
+    window.dispatchEvent(event);
+  }
+
   // Handle form submission
   document.addEventListener('submit', async (e) => {
     const form = e.target as HTMLFormElement;
     if (form.id === 'articleForm') {
       e.preventDefault();
       
+      if (isLoading) return;
+      isLoading = true;
+      updateFeedback({ isLoading: true, success: null, error: null });
+      
       const formData = new FormData(form);
       const data: any = {};
       
       // Process form data
       formData.forEach((value, key) => {
-        if (key.includes('[')) {
-          // Handle array fields like tag_ids[0], category_ids[1]
+        // Handle nested array fields like itinerary_items[0][title]
+        const nestedMatch = key.match(/^(.+)\[(\d+)\]\[(.+)\]$/);
+        if (nestedMatch) {
+          const fieldName = nestedMatch[1];
+          const index = parseInt(nestedMatch[2]);
+          const subField = nestedMatch[3];
+          
+          if (!data[fieldName]) data[fieldName] = [];
+          if (!data[fieldName][index]) data[fieldName][index] = {};
+          data[fieldName][index][subField] = value;
+        }
+        // Handle simple array fields like tag_ids[0]
+        else if (key.includes('[')) {
           const match = key.match(/^(.+)\[(\d+)\]$/);
           if (match) {
             const fieldName = match[1];
@@ -55,14 +79,32 @@ const tourLeaders = await getTourLeaders();
         });
         
         if (response.ok) {
-          window.location.href = '/articles';
+          const result = await response.json();
+          updateFeedback({ 
+            isLoading: false, 
+            success: { show: true, message: 'Articolo creato con successo!' }, 
+            error: null 
+          });
+          setTimeout(() => {
+            window.location.href = `/articles/edit/${result.id}`;
+          }, 1000);
         } else {
           const error = await response.json();
-          alert('Errore: ' + (error.message || 'Impossibile creare l\'articolo'));
+          isLoading = false;
+          updateFeedback({ 
+            isLoading: false, 
+            success: null, 
+            error: { show: true, message: error.message || 'Impossibile creare l\'articolo' } 
+          });
         }
       } catch (error) {
         console.error('Error:', error);
-        alert('Errore di rete');
+        isLoading = false;
+        updateFeedback({ 
+          isLoading: false, 
+          success: null, 
+          error: { show: true, message: 'Errore durante la creazione dell\'articolo' } 
+        });
       }
     }
   });

@@ -133,13 +133,41 @@ export const ArticleSchema = z.discriminatedUnion('type', [
   }),
 ]);
 
-export const CreateArticleSchema = ArticleSchema.omit({
+// Input schemas (without auto-generated fields)
+const BaseCreateArticleSchema = BaseArticleSchema.omit({
   _id: true,
   created_at: true,
   updated_at: true,
 });
 
-export const UpdateArticleSchema = CreateArticleSchema.partial();
+export const CreateRememberArticleSchema = BaseCreateArticleSchema.merge(RememberFieldsSchema).extend({
+  type: z.literal('REMEMBER'),
+});
+
+export const CreateBookingArticleSchema = BaseCreateArticleSchema.merge(BookingFieldsSchema).extend({
+  type: z.literal('BOOK_NOW'),
+});
+
+export const CreateArticleSchema = z.union([
+  CreateRememberArticleSchema,
+  CreateBookingArticleSchema,
+]);
+
+// Update schemas - make base fields partial, keep type literal
+const BaseUpdateArticleSchema = BaseCreateArticleSchema.partial();
+
+export const UpdateRememberArticleSchema = BaseUpdateArticleSchema.merge(RememberFieldsSchema.partial()).extend({
+  type: z.literal('REMEMBER').optional(),
+});
+
+export const UpdateBookingArticleSchema = BaseUpdateArticleSchema.merge(BookingFieldsSchema.partial()).extend({
+  type: z.literal('BOOK_NOW').optional(),
+});
+
+export const UpdateArticleSchema = z.union([
+  UpdateRememberArticleSchema,
+  UpdateBookingArticleSchema,
+]);
 
 export type Article = z.infer<typeof ArticleSchema>;
 export type ArticleType = z.infer<typeof ArticleTypeSchema>;

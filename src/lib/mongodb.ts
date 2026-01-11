@@ -36,8 +36,9 @@ if (isProd) {
 
 export { client, db };
 
-// Collections
+// Collections with db reference
 export const collections = {
+  db, // Export db for custom collections
   authors: db.collection('authors'),
   articles: db.collection('articles'),
   tags: db.collection('tags'),

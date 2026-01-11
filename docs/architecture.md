@@ -123,20 +123,86 @@ Reusable utilities and logic.
 
 ### Adv
 - `_id` (ObjectId) - Unique identifier
+- `author_id` (ObjectId) - Reference to Author
 - `title` (string) - Advertising title
 - `subtitle` (string, optional) - Subtitle
+- `description` (string, optional) - Description
+- `image` (SizedImage/String) - Advertisement image
 - `link` (string, optional) - Destination URL
-- `date` (datetime, editable) - Publication date (can be future)
-- `status` (enum) - Status: `published`, `deleted`, `planned`, `draft`
+- `type` (string, optional) - Type: `banner`, `popup`, `sidebar`, `newsletter`
+- `position` (string, optional) - Position: `home`, `article`, `category`, `tag`, `search`
+- `priority` (number, optional) - Priority 0-10 (higher = more priority)
+- `impressions` (number, optional) - View counter
+- `clicks` (number, optional) - Click counter
+- `published` (boolean) - Publication status
+- `published_date` (datetime, optional) - Publication date
+- `start_date` (datetime, optional) - Start date for scheduling
+- `end_date` (datetime, optional) - End date for scheduling
 - `created_at` (datetime) - Creation date
 - `updated_at` (datetime) - Last update date
-- `author_id` (ObjectId) - Advertisement author
-- Index: `status`, `date`
+- Indexes: `author_id`, `published`, `type`, `position`, `start_date`, `end_date`, `priority`
 
 **Adv Notes**:
-- Future date → `status = 'planned'`
-- Cron system automatically publishes when scheduled date is reached
+- Only admins can create/modify Adv
 - Only admins can modify `author_id` (assign to other users)
+- Advs with future `start_date` are not shown
+- Advs with past `end_date` are not shown
+- Sorting by `priority` (desc) then `published_date` (desc)
+
+### AppSettings
+Single document for global application configuration.
+
+- `_id` (ObjectId) - Fixed ID: "app_settings"
+- **Site Info**: `site_name`, `site_description`, `site_url`, `site_logo` (SizedImage/String), `site_favicon`
+- **SEO**: `meta_title`, `meta_description`, `meta_keywords` (array), `og_image` (SizedImage/String)
+- **Social**: `social_facebook`, `social_instagram`, `social_twitter`, `social_youtube`, `social_linkedin`, `social_tiktok`
+- **Contact**: `contact_email`, `contact_phone`, `contact_address`
+- **Analytics**: `google_analytics_id`, `google_tag_manager_id`, `facebook_pixel_id`
+- **Stripe**: `stripe_publishable_key`, `stripe_secret_key` (encrypted), `stripe_webhook_secret` (encrypted)
+- **Email**: `smtp_host`, `smtp_port`, `smtp_user`, `smtp_password` (encrypted), `email_from`, `email_from_name`
+- **Features**: `enable_comments`, `enable_newsletter`, `enable_booking`, `maintenance_mode`
+- **Legal**: `privacy_policy_html`, `terms_and_conditions_html`, `cookie_policy_html`
+- **Newsletter**: `newsletter_provider`, `newsletter_api_key` (encrypted), `newsletter_list_id`
+- **Booking**: `booking_confirmation_email_template`, `booking_cancellation_hours`, `booking_min_travelers`
+- `created_at` (datetime) - Creation date
+- `updated_at` (datetime) - Last update date
+
+**AppSettings Notes**:
+- Only **one document** exists with fixed `_id`
+- Sensitive fields (passwords, API keys) must be **encrypted** before saving
+- Only admins can modify AppSettings
+- Dedicated form in CMS "Settings" section (admin only)
+
+### Notification
+Push notifications management for mobile app.
+
+- `_id` (ObjectId) - Unique identifier
+- `title` (string) - Notification title
+- `body` (string) - Notification message
+- `image` (string, optional) - Image URL
+- `target_type` (string) - "all" | "user" | "segment"
+- `target_user_ids` (array[string], optional) - Specific user IDs
+- `target_segment` (string, optional) - User segment (tour_leaders, admins, active_users)
+- `action_type` (string, optional) - "article" | "author" | "category" | "tag" | "url" | "none"
+- `action_id` (string, optional) - Resource ID for action
+- `action_url` (string, optional) - Custom URL
+- `scheduled_at` (datetime, optional) - Scheduled send time (null = immediate)
+- `sent_at` (datetime, optional) - Actual send time
+- `status` (string) - "draft" | "scheduled" | "sent" | "failed"
+- `sent_count` (number) - Successfully sent count
+- `failed_count` (number) - Failed send count
+- `author_id` (ObjectId) - Creator reference
+- `created_at` (datetime) - Creation date
+- `updated_at` (datetime) - Last update date
+- Index: `status`, `scheduled_at`, `author_id`, `created_at`
+
+**Notification Notes**:
+- Only admins can create/modify notifications
+- Notifications with `status="sent"` cannot be modified
+- `sent_at` set automatically when notification is sent
+- If `scheduled_at` is null, notification sends immediately
+- Actual sending handled via Firebase Cloud Messaging (FCM)
+- User FCM tokens stored in `users` collection
 
 ## Cron System
 

@@ -3,6 +3,7 @@ import MainLayout from '@/layouts/MainLayout.astro';
 import { getAdvById } from '@/data/adv';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
 import { toISODateTimeLocal } from '@/utils';
+import { FormFeedback } from '@/components/FormFeedback';
 
 
 
@@ -133,13 +134,25 @@ const userIsAdmin = await isAdmin();
     </div>
   </div>
 
+  <FormFeedback client:only="react" isLoading={false} success={null} error={null} />
+
   <script>
     const form = document.getElementById('advForm') as HTMLFormElement;
     const advId = (document.getElementById('advId') as HTMLInputElement).value;
     const isAdmin = (document.getElementById('isAdmin') as HTMLInputElement).value === 'true';
+    let isLoading = false;
+    
+    function updateFeedback(props: any) {
+      const event = new CustomEvent('formFeedback', { detail: props });
+      window.dispatchEvent(event);
+    }
     
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      
+      if (isLoading) return;
+      isLoading = true;
+      updateFeedback({ isLoading: true, success: null, error: null });
       
       const formData = new FormData(form);
       const data: any = {
@@ -164,15 +177,39 @@ const userIsAdmin = await isAdmin();
           body: JSON.stringify(data),
         });
         
+        isLoading = false;
+        
         if (response.ok) {
-          window.location.href = '/advs';
+          updateFeedback({ 
+            isLoading: false, 
+            success: { 
+              show: true, 
+              message: 'Advertising aggiornato con successo!'
+            }, 
+            error: null 
+          });
         } else {
           const error = await response.json();
-          alert('Errore durante l\'aggiornamento dell\'advertising: ' + (error.message || 'Errore sconosciuto'));
+          updateFeedback({ 
+            isLoading: false, 
+            success: null, 
+            error: { 
+              show: true, 
+              message: error.message || 'Errore durante l\'aggiornamento'
+            }
+          });
         }
       } catch (error) {
         console.error(error);
-        alert('Errore durante l\'aggiornamento dell\'advertising');
+        isLoading = false;
+        updateFeedback({ 
+          isLoading: false, 
+          success: null, 
+          error: { 
+            show: true, 
+            message: 'Errore durante l\'aggiornamento dell\'advertising'
+          }
+        });
       }
     });
   </script>

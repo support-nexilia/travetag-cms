@@ -96,11 +96,13 @@ export function ItineraryRepeater({ initialItems = [] }: Props) {
             </div>
 
             <div className="grid grid-cols-1 gap-3">
+              <input type="hidden" name={`itinerary_items[${index}][order]`} value={index} />
+              
               <div>
                 <label className="block text-xs text-gray-600 mb-1">Titolo</label>
                 <input
                   type="text"
-                  name={`itinerary_title_${index}`}
+                  name={`itinerary_items[${index}][title]`}
                   value={item.title}
                   onChange={(e) => updateItem(index, 'title', e.target.value)}
                   placeholder="es: Arrivo a Firenze"
@@ -111,7 +113,7 @@ export function ItineraryRepeater({ initialItems = [] }: Props) {
               <div>
                 <label className="block text-xs text-gray-600 mb-1">Descrizione</label>
                 <textarea
-                  name={`itinerary_content_${index}`}
+                  name={`itinerary_items[${index}][content]`}
                   value={item.content}
                   onChange={(e) => updateItem(index, 'content', e.target.value)}
                   rows={3}

@@ -1,5 +1,6 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
+import { FormFeedback } from '@/components/FormFeedback';
 ---
 
 <MainLayout title="Nuovo Autore">
@@ -169,7 +170,9 @@ import MainLayout from '@/layouts/MainLayout.astro';
     </div>
   </div>
 
-  <script>
+  <FormFeedback client:only="react" isLoading={false} success={null} error={null} />
+
+  <script is:inline>
     const socialTypes = ['instagram', 'facebook', 'twitter', 'linkedin', 'tiktok'] as const;
     let socialCount = 0;
 
@@ -211,34 +214,38 @@ import MainLayout from '@/layouts/MainLayout.astro';
 
     addSocialBtn.addEventListener('click', () => addSocialField());
 
-    const form = document.getElementById('authorForm') as HTMLFormElement;
+    const form = document.getElementById('authorForm');
     
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
+      if (isLoading) return;
+      isLoading = true;
+      updateFeedback({ isLoading: true, success: null, error: null });
+      
       const formData = new FormData(form);
       
       // Collect languages
-      const languages: string[] = [];
-      formData.getAll('languages').forEach((lang) => languages.push(lang as string));
+      const languages = [];
+      formData.getAll('languages').forEach((lang) => languages.push(lang));
       
       // Collect social networks
-      const social: Array<{ type: string; url: string }> = [];
+      const social = [];
       for (let i = 0; i < socialCount; i++) {
-        const type = formData.get(`social_type_${i}`) as string;
-        const url = formData.get(`social_url_${i}`) as string;
+        const type = formData.get(`social_type_${i}`);
+        const url = formData.get(`social_url_${i}`);
         if (type && url) {
           social.push({ type, url });
         }
       }
       
       const data = {
-        name: formData.get('name') as string,
-        nickname: (formData.get('nickname') as string) || undefined,
-        email: formData.get('email') as string,
-        bio: (formData.get('bio') as string) || undefined,
-        image: (formData.get('image') as string) || undefined,
-        background_image: (formData.get('background_image') as string) || undefined,
+        name: formData.get('name'),
+        nickname: formData.get('nickname') || undefined,
+        email: formData.get('email'),
+        bio: formData.get('bio') || undefined,
+        image: formData.get('image') || undefined,
+        background_image: formData.get('background_image') || undefined,
         is_admin: formData.get('is_admin') === 'on',
         is_tour_leader: formData.get('is_tour_leader') === 'on' || undefined,
         languages,
@@ -255,14 +262,39 @@ import MainLayout from '@/layouts/MainLayout.astro';
         });
         
         if (response.ok) {
-          window.location.href = '/authors';
+          const result = await response.json();
+          updateFeedback({ 
+            isLoading: false, 
+            success: { 
+              show: true, 
+              message: 'Autore creato con successo!'
+            }, 
+            error: null 
+          });
+          setTimeout(() => {
+            window.location.href = `/authors/edit/${result.id}`;
+          }, 1000);
         } else {
           const error = await response.json();
-          alert('Errore: ' + (error.message || 'Impossibile creare l\'autore'));
+          updateFeedback({ 
+            isLoading: false, 
+            success: null, 
+            error: { 
+              show: true, 
+              message: error.message || 'Impossibile creare l\'autore'
+            }
+          });
         }
       } catch (error) {
         console.error('Error:', error);
-        alert('Errore durante la creazione dell\'autore');
+        updateFeedback({ 
+          isLoading: false, 
+          success: null, 
+          error: { 
+            show: true, 
+            message: 'Errore durante la creazione dell\'autore'
+          }
+        });
       }
     });
   </script>

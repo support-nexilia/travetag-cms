@@ -1,6 +1,7 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
 import { getCategoryById } from '@/data/category';
+import { FormFeedback } from '@/components/FormFeedback';
 
 
 
@@ -77,11 +78,19 @@ if (!category) return Astro.redirect('/categories');
     </div>
   </div>
 
-  <script>
-    const form = document.getElementById('categoryForm') as HTMLFormElement;
-    const categoryId = (document.getElementById('categoryId') as HTMLInputElement).value;
-    const nameInput = document.getElementById('name') as HTMLInputElement;
-    const slugInput = document.getElementById('slug') as HTMLInputElement;
+  <FormFeedback client:only="react" isLoading={false} success={null} error={null} />
+
+  <script is:inline>
+    const form = document.getElementById('categoryForm');
+    const categoryId = document.getElementById('categoryId').value;
+    const nameInput = document.getElementById('name');
+    const slugInput = document.getElementById('slug');
+    let isLoading = false;
+    
+    function updateFeedback(props) {
+      const event = new CustomEvent('formFeedback', { detail: props });
+      window.dispatchEvent(event);
+    }
     
     // Auto-generate slug from name
     nameInput.addEventListener('input', () => {
@@ -116,14 +125,35 @@ if (!category) return Astro.redirect('/categories');
         });
         
         if (response.ok) {
-          window.location.href = '/categories';
+          updateFeedback({ 
+            isLoading: false, 
+            success: { 
+              show: true, 
+              message: 'Categoria aggiornata con successo!'
+            }, 
+            error: null 
+          });
         } else {
           const error = await response.json();
-          alert('Errore durante l\'aggiornamento della categoria: ' + (error.message || 'Errore sconosciuto'));
+          updateFeedback({ 
+            isLoading: false, 
+            success: null, 
+            error: { 
+              show: true, 
+              message: error.message || 'Errore durante l\'aggiornamento'
+            }
+          });
         }
       } catch (error) {
         console.error(error);
-        alert('Errore durante l\'aggiornamento della categoria');
+        updateFeedback({ 
+          isLoading: false, 
+          success: null, 
+          error: { 
+            show: true, 
+            message: 'Errore durante l\'aggiornamento della categoria'
+          }
+        });
       }
     });
   </script>
