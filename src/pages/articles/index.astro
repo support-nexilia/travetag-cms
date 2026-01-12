@@ -70,8 +70,8 @@ const articlesWithAuthors = await Promise.all(
                 </Badge>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <Badge className={article.published ? 'bg-blue-500 text-white' : 'bg-gray-400 text-white'}>
-                  {article.published ? 'Pubblicato' : 'Bozza'}
+                <Badge className={article.status === 'PUBLISHED' ? 'bg-blue-500 text-white' : 'bg-gray-400 text-white'}>
+                  {article.status === 'PUBLISHED' ? 'Pubblicato' : 'Bozza'}
                 </Badge>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">

@@ -5,6 +5,7 @@ import { TravelersConfig } from './TravelersConfig';
 import { TagSelector } from './TagSelector';
 import { CategorySelector } from './CategorySelector';
 import TypesRepeater from './TypesRepeater';
+import RichTextEditor from './RichTextEditor';
 
 interface Author {
   _id: string;
@@ -337,13 +338,11 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
             <label htmlFor="description_HTML" className="block text-sm font-medium text-gray-700 mb-2">
               Contenuto HTML
             </label>
-            <textarea
-              id="description_HTML"
+            <RichTextEditor
               name="description_HTML"
               defaultValue={article?.description_HTML}
               rows={8}
-              placeholder="<p>Contenuto articolo in HTML...</p>"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35] font-mono text-sm"
+              placeholder="Scrivi qui il contenuto dell'articolo..."
             />
           </div>
         </div>
@@ -534,213 +533,215 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
 
       {/* BOOK_NOW Content Sections */}
       {articleType === 'BOOK_NOW' && (
-        <div className="border-t pt-4 space-y-4">
-          <h3 className="text-lg font-semibold text-gray-700">Sezioni Contenuto</h3>
+        <div className="border-t pt-6 space-y-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+            📝 Sezioni Contenuto
+          </h3>
           
           {/* Trip in a Nutshell */}
-          <div className="grid grid-cols-1 gap-4">
+          <div className="bg-gray-50 rounded-lg p-5 border border-gray-200 shadow-sm space-y-3">
+            <h4 className="text-md font-semibold text-gray-800 mb-3">Il viaggio in breve</h4>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Titolo "Il viaggio in breve"
+                Titolo Sezione
               </label>
               <input
                 type="text"
                 name="trip_in_a_nutshell_title"
                 defaultValue={article?.trip_in_a_nutshell_title}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Contenuto HTML
               </label>
-              <textarea
+              <RichTextEditor
                 name="trip_in_a_nutshell_body_HTML"
                 defaultValue={article?.trip_in_a_nutshell_body_HTML}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                rows={4}
               />
             </div>
           </div>
 
           {/* Highlights */}
-          <div className="grid grid-cols-1 gap-4">
+          <div className="bg-gray-50 rounded-lg p-5 border border-gray-200 shadow-sm space-y-3">
+            <h4 className="text-md font-semibold text-gray-800 mb-3">I punti forti</h4>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Titolo "I punti forti"
+                Titolo Sezione
               </label>
               <input
                 type="text"
                 name="highlights_title"
                 defaultValue={article?.highlights_title}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Contenuto HTML
               </label>
-              <textarea
+              <RichTextEditor
                 name="highlights_body_HTML"
                 defaultValue={article?.highlights_body_HTML}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                rows={4}
               />
             </div>
           </div>
 
           {/* Additional Information */}
-          <div className="grid grid-cols-1 gap-4">
+          <div className="bg-gray-50 rounded-lg p-5 border border-gray-200 shadow-sm space-y-3">
+            <h4 className="text-md font-semibold text-gray-800 mb-3">Informazioni aggiuntive</h4>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Titolo "Informazioni aggiuntive"
+                Titolo Sezione
               </label>
               <input
                 type="text"
                 name="additional_information_title"
                 defaultValue={article?.additional_information_title}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Contenuto HTML
               </label>
-              <textarea
+              <RichTextEditor
                 name="additional_information_body_HTML"
                 defaultValue={article?.additional_information_body_HTML}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                rows={4}
               />
             </div>
           </div>
 
           {/* How We Move */}
-          <div className="grid grid-cols-1 gap-4">
+          <div className="bg-gray-50 rounded-lg p-5 border border-gray-200 shadow-sm space-y-3">
+            <h4 className="text-md font-semibold text-gray-800 mb-3">Come ci muoviamo</h4>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Titolo "Come ci muoviamo"
+                Titolo Sezione
               </label>
               <input
                 type="text"
                 name="how_we_move_title"
                 defaultValue={article?.how_we_move_title}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Contenuto HTML
               </label>
-              <textarea
+              <RichTextEditor
                 name="how_we_move_body_HTML"
                 defaultValue={article?.how_we_move_body_HTML}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                rows={4}
               />
             </div>
           </div>
 
           {/* Where We Sleep */}
-          <div className="grid grid-cols-1 gap-4">
+          <div className="bg-gray-50 rounded-lg p-5 border border-gray-200 shadow-sm space-y-3">
+            <h4 className="text-md font-semibold text-gray-800 mb-3">Dove dormiamo</h4>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Titolo "Dove dormiamo"
+                Titolo Sezione
               </label>
               <input
                 type="text"
                 name="where_we_sleep_title"
                 defaultValue={article?.where_we_sleep_title}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Contenuto HTML
               </label>
-              <textarea
+              <RichTextEditor
                 name="where_we_sleep_body_HTML"
                 defaultValue={article?.where_we_sleep_body_HTML}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                rows={4}
               />
             </div>
           </div>
 
           {/* Not Included in Price */}
-          <div className="grid grid-cols-1 gap-4">
+          <div className="bg-gray-50 rounded-lg p-5 border border-gray-200 shadow-sm space-y-3">
+            <h4 className="text-md font-semibold text-gray-800 mb-3">Non incluso nel prezzo</h4>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Titolo "Non incluso nel prezzo"
+                Titolo Sezione
               </label>
               <input
                 type="text"
                 name="not_included_in_the_price_title"
                 defaultValue={article?.not_included_in_the_price_title}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Contenuto HTML
               </label>
-              <textarea
+              <RichTextEditor
                 name="not_included_in_the_price_body_HTML"
                 defaultValue={article?.not_included_in_the_price_body_HTML}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                rows={4}
               />
             </div>
           </div>
 
           {/* Included in Price */}
-          <div className="grid grid-cols-1 gap-4">
+          <div className="bg-gray-50 rounded-lg p-5 border border-gray-200 shadow-sm space-y-3">
+            <h4 className="text-md font-semibold text-gray-800 mb-3">Incluso nel prezzo</h4>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Titolo "Incluso nel prezzo"
+                Titolo Sezione
               </label>
               <input
                 type="text"
                 name="included_in_the_price_title"
                 defaultValue={article?.included_in_the_price_title}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Contenuto HTML
               </label>
-              <textarea
+              <RichTextEditor
                 name="included_in_the_price_body_HTML"
                 defaultValue={article?.included_in_the_price_body_HTML}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                rows={4}
               />
             </div>
           </div>
 
           {/* Type of Trip */}
-          <div className="grid grid-cols-1 gap-4">
+          <div className="bg-gray-50 rounded-lg p-5 border border-gray-200 shadow-sm space-y-3">
+            <h4 className="text-md font-semibold text-gray-800 mb-3">Tipo di viaggio</h4>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Titolo "Tipo di viaggio"
+                Titolo Sezione
               </label>
               <input
                 type="text"
                 name="type_of_trip_title"
                 defaultValue={article?.type_of_trip_title}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Contenuto HTML
               </label>
-              <textarea
+              <RichTextEditor
                 name="type_of_trip_body_HTML"
                 defaultValue={article?.type_of_trip_body_HTML}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                rows={4}
               />
             </div>
           </div>

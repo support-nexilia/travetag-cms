@@ -93,16 +93,27 @@ export const PUT: APIRoute = async ({ params, request }) => {
     // Convert numbers for BOOK_NOW type
     const numberFields = [
       'duration_days', 'min_people', 'max_people', 'max_booking_num',
-      'price_adults', 'price_children', 'price_couples', 'price_newborns',
       'travelers_adults_min', 'travelers_adults_max',
       'travelers_children_min', 'travelers_children_max',
       'travelers_couples_min', 'travelers_couples_max',
       'travelers_newborns_min', 'travelers_newborns_max'
     ];
+    const priceFields = [
+      'price_adults', 'price_children', 'price_couples', 'price_newborns'
+    ];
+    
     numberFields.forEach(field => {
       if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
         const parsed = typeof data[field] === 'string' ? parseFloat(data[field]) : data[field];
         data[field] = isNaN(parsed) ? undefined : parsed;
+      }
+    });
+    
+    // Price fields need rounding to 2 decimals to avoid floating point errors
+    priceFields.forEach(field => {
+      if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
+        const parsed = typeof data[field] === 'string' ? parseFloat(data[field]) : data[field];
+        data[field] = isNaN(parsed) ? undefined : Math.round(parsed * 100) / 100;
       }
     });
     
@@ -115,6 +126,10 @@ export const PUT: APIRoute = async ({ params, request }) => {
       if (data[field] !== undefined) {
         if (typeof data[field] === 'string') {
           data[field] = data[field] === 'true' || data[field] === 'on';
+        } else if (typeof data[field] === 'boolean') {
+          // Already boolean, keep as is
+        } else {
+          data[field] = false;
         }
       }
     });

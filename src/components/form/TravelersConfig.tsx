@@ -57,6 +57,11 @@ export function TravelersConfig({ initialConfig, onConfigChange }: Props) {
           />
           <span className="text-sm font-medium text-gray-700">{label}</span>
         </label>
+        
+        {/* Hidden field to always send a value even when checkbox is unchecked */}
+        {!config.allowed && (
+          <input type="hidden" name={`travelers_${type}_allowed`} value="false" />
+        )}
 
         {config.allowed && (
           <div className="ml-6 grid grid-cols-3 gap-3">
