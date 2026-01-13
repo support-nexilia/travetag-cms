@@ -113,7 +113,7 @@ const notifications = await getAllNotifications(undefined, true);
         if (!confirm('Sei sicuro di voler eliminare questa notifica?')) return;
         
         try {
-          const response = await fetch(`/api/notifications/${id}`, {
+          const response = await fetch(`/admin/api/notifications/${id}`, {
             method: 'DELETE',
           });
           

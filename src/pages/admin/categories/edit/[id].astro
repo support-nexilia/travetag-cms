@@ -6,10 +6,10 @@ import { FormFeedback } from '@/components/FormFeedback';
 
 
 const { id } = Astro.params;
-if (!id) return Astro.redirect('/categories');
+if (!id) return Astro.redirect('/admin/categories');
 
 const category = await getCategoryById(id);
-if (!category) return Astro.redirect('/categories');
+if (!category) return Astro.redirect('/admin/categories');
 ---
 
 <MainLayout title={`Modifica ${category.name}`}>
@@ -116,7 +116,7 @@ if (!category) return Astro.redirect('/categories');
       };
       
       try {
-        const response = await fetch(`/api/categories/${categoryId}`, {
+        const response = await fetch(`/admin/api/categories/${categoryId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

@@ -29,7 +29,7 @@ export function DeleteButton({ id, entityType, entityName }: DeleteButtonProps) 
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/${entityPaths[entityType]}/${id}`, {
+      const response = await fetch(`/admin/api/${entityPaths[entityType]}/${id}`, {
         method: 'DELETE',
       });
 

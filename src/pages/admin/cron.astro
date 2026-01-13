@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 
 const userIsAdmin = await isAdmin();
 if (!userIsAdmin) {
-  return Astro.redirect('/');
+  return Astro.redirect('/admin');
 }
 
 // Get all planned posts and advs
@@ -149,7 +149,7 @@ const plannedAdvs = await prisma.adv.findMany({
       triggerButton.textContent = '⏳ Elaborazione...';
       
       try {
-        const response = await fetch('/api/cron/trigger', {
+        const response = await fetch('/admin/api/cron/trigger', {
           method: 'POST',
         });
         

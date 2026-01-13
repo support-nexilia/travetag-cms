@@ -8,10 +8,10 @@ import { FormFeedback } from '@/components/FormFeedback';
 
 
 const { id } = Astro.params;
-if (!id) return Astro.redirect('/advs');
+if (!id) return Astro.redirect('/admin/advs');
 
 const adv = await getAdvById(id);
-if (!adv) return Astro.redirect('/advs');
+if (!adv) return Astro.redirect('/admin/advs');
 
 const user = await getCurrentUser();
 const userIsAdmin = await isAdmin();
@@ -169,7 +169,7 @@ const userIsAdmin = await isAdmin();
       }
       
       try {
-        const response = await fetch(`/api/advs/${advId}`, {
+        const response = await fetch(`/admin/api/advs/${advId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

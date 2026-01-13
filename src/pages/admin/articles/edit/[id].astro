@@ -6,10 +6,10 @@ import { ArticleForm } from '@/components/form/ArticleForm';
 import FormFeedback from '@/components/FormFeedback';
 
 const { id } = Astro.params;
-if (!id) return Astro.redirect('/articles');
+if (!id) return Astro.redirect('/admin/articles');
 
 const article = await getArticleById(id);
-if (!article) return Astro.redirect('/articles');
+if (!article) return Astro.redirect('/admin/articles');
 
 const authors = await getAllAuthors();
 const tourLeaders = await getTourLeaders();
@@ -104,7 +104,7 @@ const tourLeadersData = tourLeaders.map(tl => ({
       console.log('Sending data:', data);
       
       try {
-        const response = await fetch(`/api/articles/${articleId}`, {
+        const response = await fetch(`/admin/api/articles/${articleId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),

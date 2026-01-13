@@ -6,10 +6,10 @@ import { FormFeedback } from '@/components/FormFeedback';
 
 
 const { id } = Astro.params;
-if (!id) return Astro.redirect('/tags');
+if (!id) return Astro.redirect('/admin/tags');
 
 const tag = await getTagById(id);
-if (!tag) return Astro.redirect('/tags');
+if (!tag) return Astro.redirect('/admin/tags');
 ---
 
 <MainLayout title={`Modifica ${tag.name}`}>
@@ -116,7 +116,7 @@ if (!tag) return Astro.redirect('/tags');
       };
       
       try {
-        const response = await fetch(`/api/tags/${tagId}`, {
+        const response = await fetch(`/admin/api/tags/${tagId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

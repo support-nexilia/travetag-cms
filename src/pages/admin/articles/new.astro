@@ -72,7 +72,7 @@ const tourLeaders = await getTourLeaders();
       });
       
       try {
-        const response = await fetch('/api/articles', {
+        const response = await fetch('/admin/api/articles', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),

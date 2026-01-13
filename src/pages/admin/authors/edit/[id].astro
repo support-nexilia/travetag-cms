@@ -4,10 +4,10 @@ import { getAuthorById } from '@/data/author';
 import { FormFeedback } from '@/components/FormFeedback';
 
 const { id } = Astro.params;
-if (!id) return Astro.redirect('/authors');
+if (!id) return Astro.redirect('/admin/authors');
 
 const author = await getAuthorById(id);
-if (!author) return Astro.redirect('/authors');
+if (!author) return Astro.redirect('/admin/authors');
 ---
 
 <MainLayout title={`Modifica ${author.name}`}>
@@ -287,7 +287,7 @@ if (!author) return Astro.redirect('/authors');
       };
       
       try {
-        const response = await fetch(`/api/authors/${authorId}`, {
+        const response = await fetch(`/admin/api/authors/${authorId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

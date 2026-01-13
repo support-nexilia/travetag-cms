@@ -255,7 +255,7 @@ const authors = await getAllAuthors();
       if (formData.get('published_date')) data.published_date = new Date(formData.get('published_date') as string).toISOString();
       
       try {
-        const response = await fetch('/api/advs', {
+        const response = await fetch('/admin/api/advs', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

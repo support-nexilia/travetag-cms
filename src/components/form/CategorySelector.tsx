@@ -19,7 +19,7 @@ export function CategorySelector({ initialSelectedIds = [] }: CategorySelectorPr
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch('/api/categories')
+    fetch('/admin/api/categories')
       .then(res => res.json())
       .then(data => {
         setCategories(data);

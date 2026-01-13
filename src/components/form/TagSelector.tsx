@@ -19,7 +19,7 @@ export function TagSelector({ initialSelectedIds = [] }: TagSelectorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch('/api/tags')
+    fetch('/admin/api/tags')
       .then(res => res.json())
       .then(data => {
         setTags(data);

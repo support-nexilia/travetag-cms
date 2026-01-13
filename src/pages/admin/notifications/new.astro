@@ -276,7 +276,7 @@ const user = await getCurrentUser();
       }
       
       try {
-        const response = await fetch('/api/notifications', {
+        const response = await fetch('/admin/api/notifications', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
