@@ -1,0 +1,41 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+---
+
+<MainLayout title="Dashboard - TravelTag CMS">
+  <div class="max-w-7xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">Dashboard</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="backdrop-blur-md bg-white/60 p-6 rounded-lg shadow-lg border border-white/20">
+        <h3 class="text-sm font-medium text-gray-600">Total Posts</h3>
+        <p class="text-3xl font-bold text-gray-900 mt-2">0</p>
+      </div>
+      
+      <div class="backdrop-blur-md bg-white/60 p-6 rounded-lg shadow-lg border border-white/20">
+        <h3 class="text-sm font-medium text-gray-600">Categories</h3>
+        <p class="text-3xl font-bold text-gray-900 mt-2">0</p>
+      </div>
+      
+      <div class="backdrop-blur-md bg-white/60 p-6 rounded-lg shadow-lg border border-white/20">
+        <h3 class="text-sm font-medium text-gray-600">Tags</h3>
+        <p class="text-3xl font-bold text-gray-900 mt-2">0</p>
+      </div>
+      
+      <div class="backdrop-blur-md bg-white/60 p-6 rounded-lg shadow-lg border border-white/20">
+        <h3 class="text-sm font-medium text-gray-600">Advertising</h3>
+        <p class="text-3xl font-bold text-gray-900 mt-2">0</p>
+      </div>
+    </div>
+
+    <div class="mt-8 backdrop-blur-md bg-white/60 p-6 rounded-lg shadow-lg border border-white/20">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">Quick Links</h2>
+      <ul class="space-y-2">
+        <li><a href="/admin/demo" class="text-blue-600 hover:underline">📚 View Component Library (Demo)</a></li>
+        <li><a href="/posts/new" class="text-blue-600 hover:underline">📝 Create New Post</a></li>
+        <li><a href="/admin/categories" class="text-blue-600 hover:underline">📁 Manage Categories</a></li>
+        <li><a href="/admin/tags" class="text-blue-600 hover:underline">🏷️ Manage Tags</a></li>
+      </ul>
+    </div>
+  </div>
+</MainLayout>
