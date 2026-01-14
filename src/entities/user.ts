@@ -1,25 +1,28 @@
 import { z } from 'zod';
-
-export const UserRoleSchema = z.enum(['ADMIN', 'EDITOR']);
+import { ObjectId } from 'mongodb';
 
 export const UserSchema = z.object({
-  id: z.string().uuid(),
-  username: z.string().min(3).max(50),
-  email: z.string().email(),
-  role: UserRoleSchema,
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  _id: z.instanceof(ObjectId),
+  oidc_sub: z.string(),
+  issuer: z.string(),
+  username: z.string().optional(),
+  email: z.string().email().optional(),
+  name: z.string().optional(),
+  audience: z.union([z.string(), z.array(z.string())]).optional(),
+  scope: z.string().optional(),
+  last_login_at: z.date(),
+  created_at: z.date(),
+  updated_at: z.date(),
 });
 
 export const CreateUserSchema = UserSchema.omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
+  _id: true,
+  created_at: true,
+  updated_at: true,
 });
 
 export const UpdateUserSchema = CreateUserSchema.partial();
 
 export type User = z.infer<typeof UserSchema>;
-export type UserRole = z.infer<typeof UserRoleSchema>;
 export type CreateUser = z.infer<typeof CreateUserSchema>;
 export type UpdateUser = z.infer<typeof UpdateUserSchema>;

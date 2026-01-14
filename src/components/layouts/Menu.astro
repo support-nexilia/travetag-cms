@@ -1,6 +1,6 @@
 ---
 // Sidebar Menu component
-import { LayoutDashboard, FileText, FolderOpen, Tag, Megaphone, Bell, Settings, Users } from 'lucide-react';
+import { LayoutDashboard, FileText, FolderOpen, Tag, Megaphone, Bell, Settings, Users, UserRound } from 'lucide-react';
 import { getSession, isAdmin } from '@/lib/session';
 
 interface Props {
@@ -16,6 +16,7 @@ const userIsAdmin = isAdmin(session);
 const menuItems = [
   { href: '/admin', label: 'Dashboard', Icon: LayoutDashboard, adminOnly: false },
   { href: '/admin/authors', label: 'Autori', Icon: Users, adminOnly: true },
+  { href: '/admin/users', label: 'Utenti', Icon: UserRound, adminOnly: true },
   { href: '/admin/articles', label: 'Articoli', Icon: FileText, adminOnly: false },
   { href: '/admin/categories', label: 'Categorie', Icon: FolderOpen, adminOnly: true },
   { href: '/admin/tags', label: 'Tag', Icon: Tag, adminOnly: true },

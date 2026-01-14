@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import { createPublicKey } from 'crypto';
 import { typeDefs } from '@/graphql/typeDefs';
 import { resolvers } from '@/graphql/resolvers';
+import { createOrUpdateUserFromJwt } from '@/data/user';
 
 const ENABLE_PLAYGROUND = import.meta.env.ENABLE_PLAYGROUND.toLowerCase() === 'true';
 const GRAPHQL_JWT_ISSUER =
@@ -56,7 +57,19 @@ async function getJwks(): Promise<Jwks> {
   return cachedJwks!;
 }
 
-async function verifyRequestAuth(request: Request): Promise<Response | null> {
+type VerifiedJwtPayload = jwt.JwtPayload & {
+  sub?: string;
+  iss?: string;
+  aud?: string | string[];
+  email?: string;
+  name?: string;
+  preferred_username?: string;
+  scope?: string;
+};
+
+async function verifyRequestAuth(
+  request: Request
+): Promise<{ payload: VerifiedJwtPayload } | Response> {
   const debugHeaders = (message: string) => {
     if (!GRAPHQL_AUTH_DEBUG) return {};
     return { 'X-GraphQL-Auth-Debug': message };
@@ -102,36 +115,6 @@ async function verifyRequestAuth(request: Request): Promise<Response | null> {
     });
   }
 
-  if (GRAPHQL_AUTH_DEBUG) {
-    console.warn('graphql auth: decoded token header', decoded.header);
-    console.warn('graphql auth: decoded token claims', decoded.payload);
-  }
-
-  const tokenIssuer = typeof decoded.payload === 'object' ? decoded.payload?.iss : null;
-  if (!tokenIssuer || typeof tokenIssuer !== 'string') {
-    return new Response('Invalid token issuer', {
-      status: 401,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'WWW-Authenticate': 'Bearer error="invalid_token"',
-        ...debugHeaders('missing-issuer'),
-      },
-    });
-  }
-
-  const expectedOrigin = new URL(GRAPHQL_JWT_ISSUER).origin;
-  const tokenOrigin = new URL(tokenIssuer).origin;
-  if (tokenOrigin !== expectedOrigin) {
-    return new Response('Invalid token issuer', {
-      status: 401,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'WWW-Authenticate': 'Bearer error="invalid_token"',
-        ...debugHeaders(`issuer-mismatch:${tokenOrigin}`),
-      },
-    });
-  }
-
   const jwks = await getJwks();
   let jwk = jwks.keys.find((key) => key.kid && key.kid === decoded.header.kid);
   if (!jwk && jwks.keys.length === 1) {
@@ -159,7 +142,49 @@ async function verifyRequestAuth(request: Request): Promise<Response | null> {
 
   try {
     const key = createPublicKey({ key: jwk, format: 'jwk' });
-    jwt.verify(token, key);
+    const verifiedPayload = jwt.verify(token, key);
+    if (typeof verifiedPayload === 'string') {
+      return new Response('Invalid token', {
+        status: 401,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'WWW-Authenticate': 'Bearer error="invalid_token"',
+          ...debugHeaders('invalid-payload'),
+        },
+      });
+    }
+
+    if (GRAPHQL_AUTH_DEBUG) {
+      console.warn('graphql auth: decoded token header', decoded.header);
+      console.warn('graphql auth: decoded token claims', verifiedPayload);
+    }
+
+    const tokenIssuer = verifiedPayload.iss;
+    if (!tokenIssuer || typeof tokenIssuer !== 'string') {
+      return new Response('Invalid token issuer', {
+        status: 401,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'WWW-Authenticate': 'Bearer error="invalid_token"',
+          ...debugHeaders('missing-issuer'),
+        },
+      });
+    }
+
+    const expectedOrigin = new URL(GRAPHQL_JWT_ISSUER).origin;
+    const tokenOrigin = new URL(tokenIssuer).origin;
+    if (tokenOrigin !== expectedOrigin) {
+      return new Response('Invalid token issuer', {
+        status: 401,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'WWW-Authenticate': 'Bearer error="invalid_token"',
+          ...debugHeaders(`issuer-mismatch:${tokenOrigin}`),
+        },
+      });
+    }
+
+    return { payload: verifiedPayload as VerifiedJwtPayload };
   } catch (error) {
     if (GRAPHQL_AUTH_DEBUG) {
       console.warn('graphql auth: token verify failed', {
@@ -178,8 +203,6 @@ async function verifyRequestAuth(request: Request): Promise<Response | null> {
       },
     });
   }
-
-  return null;
 }
 
 // === Configura Apollo Server ===
@@ -210,9 +233,17 @@ export const OPTIONS: APIRoute = async () => {
 // === POST: GraphQL API ===
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const authError = await verifyRequestAuth(request);
-    if (authError) {
-      return authError;
+    const authResult = await verifyRequestAuth(request);
+    if (authResult instanceof Response) {
+      return authResult;
+    }
+
+    try {
+      await createOrUpdateUserFromJwt(authResult.payload);
+    } catch (error) {
+      console.warn('graphql auth: user upsert failed', {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
 
     const body = await request.json();

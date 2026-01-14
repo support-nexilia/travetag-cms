@@ -43,4 +43,5 @@ export const collections = {
   articles: db.collection('articles'),
   tags: db.collection('tags'),
   categories: db.collection('categories'),
+  users: db.collection('users'),
 } as const;

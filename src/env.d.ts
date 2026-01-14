@@ -16,6 +16,7 @@ interface ImportMetaEnv {
   readonly OIDC_REDIRECT_URI: string;
   readonly SESSION_SECRET: string;
   readonly GRAPHQL_JWT_ISSUER: string;
+  readonly GRAPHQL_JWT_DISCOVERY_URL: string;
   readonly GRAPHQL_AUTH_DEBUG: string;
 }
 

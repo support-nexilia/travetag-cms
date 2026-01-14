@@ -1,0 +1,68 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import { getAllUsers } from '@/data/user';
+import { getSession, isAdmin } from '@/lib/session';
+
+const session = await getSession(Astro.cookies);
+if (!isAdmin(session)) {
+  return Astro.redirect('/admin');
+}
+
+const users = await getAllUsers();
+---
+
+<MainLayout title="Utenti">
+  <div class="p-8">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">Utenti</h1>
+      <span class="text-sm text-gray-500">Solo lettura</span>
+    </div>
+
+    <div class="bg-white/80 backdrop-blur-md rounded-xl shadow-lg border border-white/20 overflow-hidden">
+      <table class="w-full">
+        <thead class="bg-gray-50/50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issuer</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ultimo accesso</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          {users.map((user) => (
+            <tr class="hover:bg-gray-50/50 transition-colors">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">{user.name || '-'}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-600">{user.username || '-'}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-600">{user.email || '-'}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-xs text-gray-600">{user.oidc_sub}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-xs text-gray-600">{user.issuer}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-600">
+                  {user.last_login_at ? new Date(user.last_login_at).toLocaleString('it-IT') : '-'}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    {users.length === 0 && (
+      <div class="text-center py-12 text-gray-500">
+        Nessun utente trovato.
+      </div>
+    )}
+  </div>
+</MainLayout>
