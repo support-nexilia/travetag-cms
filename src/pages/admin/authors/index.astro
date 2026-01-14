@@ -28,6 +28,7 @@ const authors = await getAllAuthors();
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nickname</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ruolo</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Namespace</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lingue</th>
             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Azioni</th>
           </tr>
@@ -60,17 +61,32 @@ const authors = await getAllAuthors();
                 <div class="text-sm text-gray-600">{author.nickname || '-'}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex gap-1">
-                  {author.is_admin && (
-                    <Badge className="bg-red-500 text-white">Admin</Badge>
-                  )}
-                  {author.is_tour_leader && (
-                    <Badge className="bg-blue-500 text-white">Tour Leader</Badge>
-                  )}
-                  {!author.is_admin && !author.is_tour_leader && (
-                    <Badge className="bg-gray-400 text-white">Autore</Badge>
-                  )}
-                </div>
+                {author.role ? (
+                  <Badge className={
+                    author.role === 'admin' ? 'bg-red-500 text-white' :
+                    author.role === 'tourleader' ? 'bg-blue-500 text-white' :
+                    'bg-green-500 text-white'
+                  }>
+                    {author.role === 'admin' ? 'Admin' :
+                     author.role === 'tourleader' ? 'Tour Leader' :
+                     'Editor'}
+                  </Badge>
+                ) : (
+                  <div class="flex gap-1">
+                    {author.is_admin && (
+                      <Badge className="bg-red-500 text-white">Admin</Badge>
+                    )}
+                    {author.is_tour_leader && (
+                      <Badge className="bg-blue-500 text-white">Tour Leader</Badge>
+                    )}
+                    {!author.is_admin && !author.is_tour_leader && (
+                      <Badge className="bg-gray-400 text-white">Autore</Badge>
+                    )}
+                  </div>
+                )}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-600">{author.namespace || '-'}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-600">
@@ -88,10 +104,9 @@ const authors = await getAllAuthors();
                   </a>
                   <DeleteButton
                     client:load
-                    itemId={author._id.toString()}
-                    itemName={author.name}
-                    deleteUrl={`/api/authors/${author._id.toString()}`}
-                    redirectUrl="/authors"
+                    id={author._id.toString()}
+                    entityType="author"
+                    entityName={author.name}
                   />
                 </div>
               </td>

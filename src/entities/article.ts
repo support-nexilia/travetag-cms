@@ -34,6 +34,7 @@ export const ItineraryItemSchema = z.object({
 const BaseArticleSchema = z.object({
   _id: z.instanceof(ObjectId),
   author_id: z.instanceof(ObjectId),
+  namespace: z.string().optional(), // Namespace for multi-tenancy
   title: z.string().min(1),
   subtitle: z.string().optional(),
   description: z.string(),

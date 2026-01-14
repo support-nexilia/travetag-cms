@@ -4,7 +4,7 @@ import { ConfirmModal } from '@/components/Modal';
 
 interface DeleteButtonProps {
   id: string;
-  entityType: 'category' | 'tag' | 'post' | 'adv';
+  entityType: 'category' | 'tag' | 'post' | 'adv' | 'author';
   entityName: string;
 }
 
@@ -17,6 +17,7 @@ export function DeleteButton({ id, entityType, entityName }: DeleteButtonProps) 
     tag: 'tag',
     post: 'post',
     adv: 'advertising',
+    author: 'autore',
   };
 
   const entityPaths = {
@@ -24,6 +25,7 @@ export function DeleteButton({ id, entityType, entityName }: DeleteButtonProps) 
     tag: 'tags',
     post: 'posts',
     adv: 'advs',
+    author: 'authors',
   };
 
   const handleDelete = async () => {

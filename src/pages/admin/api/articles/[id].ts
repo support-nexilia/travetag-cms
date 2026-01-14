@@ -1,9 +1,9 @@
 import type { APIRoute } from 'astro';
 import { ObjectId } from 'mongodb';
 import { getArticleById, updateArticle, deleteArticle } from '@/data/article';
-import { UpdateArticleSchema } from '@/entities/article';
+import { getSession, isAdmin, canAccessNamespace } from '@/lib/session';
 
-export const GET: APIRoute = async ({ params }) => {
+export const GET: APIRoute = async ({ params, cookies }) => {
   try {
     const { id } = params;
     if (!id) {
@@ -20,6 +20,17 @@ export const GET: APIRoute = async ({ params }) => {
     if (!article) {
       return new Response(JSON.stringify({ error: 'Article not found' }), {
         status: 404,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+
+    // Check namespace access
+    const session = await getSession(cookies);
+    if (!canAccessNamespace(session, article.namespace)) {
+      return new Response(JSON.stringify({ error: 'Access denied' }), {
+        status: 403,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -43,7 +54,7 @@ export const GET: APIRoute = async ({ params }) => {
   }
 };
 
-export const PUT: APIRoute = async ({ params, request }) => {
+export const PUT: APIRoute = async ({ params, request, cookies }) => {
   try {
     const { id } = params;
     if (!id) {
@@ -55,7 +66,38 @@ export const PUT: APIRoute = async ({ params, request }) => {
       });
     }
 
+    // Check if article exists and user has access
+    const existingArticle = await getArticleById(id);
+    if (!existingArticle) {
+      return new Response(JSON.stringify({ error: 'Article not found' }), {
+        status: 404,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+
+    const session = await getSession(cookies);
+    if (!canAccessNamespace(session, existingArticle.namespace)) {
+      return new Response(JSON.stringify({ error: 'Access denied' }), {
+        status: 403,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+
     const data = await request.json();
+    
+    // Prevent namespace changes for non-admin users
+    if (!isAdmin(session) && data.namespace && data.namespace !== existingArticle.namespace) {
+      return new Response(JSON.stringify({ error: 'Cannot change namespace' }), {
+        status: 403,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
     
     // Convert ObjectIds
     if (data.author_id && typeof data.author_id === 'string') {
@@ -203,7 +245,7 @@ export const PUT: APIRoute = async ({ params, request }) => {
   }
 };
 
-export const DELETE: APIRoute = async ({ params }) => {
+export const DELETE: APIRoute = async ({ params, cookies }) => {
   try {
     const { id } = params;
     if (!id) {
@@ -215,9 +257,9 @@ export const DELETE: APIRoute = async ({ params }) => {
       });
     }
 
-    const article = await deleteArticle(id);
-    
-    if (!article) {
+    // Check if article exists and user has access
+    const existingArticle = await getArticleById(id);
+    if (!existingArticle) {
       return new Response(JSON.stringify({ error: 'Article not found' }), {
         status: 404,
         headers: {
@@ -225,6 +267,18 @@ export const DELETE: APIRoute = async ({ params }) => {
         },
       });
     }
+
+    const session = await getSession(cookies);
+    if (!canAccessNamespace(session, existingArticle.namespace)) {
+      return new Response(JSON.stringify({ error: 'Access denied' }), {
+        status: 403,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+
+    const article = await deleteArticle(id);
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

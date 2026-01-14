@@ -2,16 +2,24 @@ import { collections } from '@/lib/mongodb';
 import type { Article, CreateArticle, UpdateArticle } from '@/entities/article';
 import { ObjectId } from 'mongodb';
 
-export async function getAllArticles() {
+export async function getAllArticles(namespace?: string) {
+  const filter: any = {};
+  if (namespace) {
+    filter.namespace = namespace;
+  }
   return await collections.articles
-    .find({})
+    .find(filter)
     .sort({ published_date: -1 })
     .toArray() as Article[];
 }
 
-export async function getPublishedArticles() {
+export async function getPublishedArticles(namespace?: string) {
+  const filter: any = { published: true };
+  if (namespace) {
+    filter.namespace = namespace;
+  }
   return await collections.articles
-    .find({ published: true })
+    .find(filter)
     .sort({ published_date: -1 })
     .toArray() as Article[];
 }
@@ -41,9 +49,13 @@ export async function getArticlesByAuthor(authorId: string) {
     .toArray() as Article[];
 }
 
-export async function getArticlesByType(type: 'REMEMBER' | 'BOOK_NOW') {
+export async function getArticlesByType(type: 'REMEMBER' | 'BOOK_NOW', namespace?: string) {
+  const filter: any = { type };
+  if (namespace) {
+    filter.namespace = namespace;
+  }
   return await collections.articles
-    .find({ type })
+    .find(filter)
     .sort({ published_date: -1 })
     .toArray() as Article[];
 }

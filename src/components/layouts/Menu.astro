@@ -1,6 +1,7 @@
 ---
 // Sidebar Menu component
 import { LayoutDashboard, FileText, FolderOpen, Tag, Megaphone, Bell, Settings, Users } from 'lucide-react';
+import { getSession, isAdmin } from '@/lib/session';
 
 interface Props {
   currentPath?: string;
@@ -8,23 +9,30 @@ interface Props {
 
 const { currentPath } = Astro.props;
 
+// Get session
+const session = await getSession(Astro.cookies);
+const userIsAdmin = isAdmin(session);
+
 const menuItems = [
-  { href: '/admin', label: 'Dashboard', Icon: LayoutDashboard },
-  { href: '/admin/authors', label: 'Autori', Icon: Users },
-  { href: '/admin/articles', label: 'Articoli', Icon: FileText },
-  { href: '/admin/categories', label: 'Categorie', Icon: FolderOpen },
-  { href: '/admin/tags', label: 'Tag', Icon: Tag },
-  { href: '/admin/advs', label: 'Advertising', Icon: Megaphone },
-  { href: '/admin/notifications', label: 'Notifiche', Icon: Bell },
-  { href: '/admin/settings', label: 'Impostazioni', Icon: Settings },
+  { href: '/admin', label: 'Dashboard', Icon: LayoutDashboard, adminOnly: false },
+  { href: '/admin/authors', label: 'Autori', Icon: Users, adminOnly: true },
+  { href: '/admin/articles', label: 'Articoli', Icon: FileText, adminOnly: false },
+  { href: '/admin/categories', label: 'Categorie', Icon: FolderOpen, adminOnly: true },
+  { href: '/admin/tags', label: 'Tag', Icon: Tag, adminOnly: true },
+  { href: '/admin/advs', label: 'Advertising', Icon: Megaphone, adminOnly: true },
+  { href: '/admin/notifications', label: 'Notifiche', Icon: Bell, adminOnly: true },
+  { href: '/admin/settings', label: 'Impostazioni', Icon: Settings, adminOnly: true },
 ];
+
+// Filter menu items based on user role
+const visibleMenuItems = menuItems.filter(item => !item.adminOnly || userIsAdmin);
 ---
 
 <aside class="w-64 min-h-screen backdrop-blur-md border-r border-white/10" style="background-color: rgba(44, 62, 80, 0.95);">
   <div class="p-6">
     <h2 class="text-xl font-bold mb-8 text-white">Menu</h2>
     <nav class="space-y-2">
-      {menuItems.map((item) => {
+      {visibleMenuItems.map((item) => {
         const isActive = currentPath === item.href;
         return (
           <a

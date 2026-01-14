@@ -1,10 +1,14 @@
 import type { APIRoute } from 'astro';
 import { getAllArticles, createArticle } from '@/data/article';
 import { CreateArticleSchema } from '@/entities/article';
+import { getSession, isAdmin } from '@/lib/session';
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ cookies }) => {
   try {
-    const articles = await getAllArticles();
+    const session = await getSession(cookies);
+    const namespace = isAdmin(session) ? undefined : session.namespace;
+    
+    const articles = await getAllArticles(namespace);
     return new Response(JSON.stringify(articles), {
       status: 200,
       headers: {
@@ -22,9 +26,15 @@ export const GET: APIRoute = async () => {
   }
 };
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
   try {
+    const session = await getSession(cookies);
     const data = await request.json();
+    
+    // Add namespace for non-admin users
+    if (!isAdmin(session) && session.namespace) {
+      data.namespace = session.namespace;
+    }
     
     // Validate data
     const validatedData = CreateArticleSchema.parse(data);

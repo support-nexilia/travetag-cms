@@ -1,0 +1,38 @@
+---
+import { getAuthorizationUrl } from '@/lib/oidc-manual';
+
+// Generate state for CSRF protection
+function randomString(length: number = 32): string {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  const randomValues = new Uint8Array(length);
+  crypto.getRandomValues(randomValues);
+  for (let i = 0; i < length; i++) {
+    result += charset[randomValues[i] % charset.length];
+  }
+  return result;
+}
+
+const state = randomString();
+
+// Get authorization URL and code verifier
+const { url: authUrl, codeVerifier } = await getAuthorizationUrl(state);
+
+// Store state and code verifier in cookies for validation in callback
+Astro.cookies.set('oidc_state', state, {
+  httpOnly: true,
+  secure: import.meta.env.PROD,
+  sameSite: 'lax',
+  maxAge: 60 * 10, // 10 minutes
+});
+
+Astro.cookies.set('oidc_code_verifier', codeVerifier, {
+  httpOnly: true,
+  secure: import.meta.env.PROD,
+  sameSite: 'lax',
+  maxAge: 60 * 10, // 10 minutes
+});
+
+// Redirect to OIDC provider
+return Astro.redirect(authUrl);
+---

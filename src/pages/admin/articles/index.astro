@@ -5,8 +5,14 @@ import { getAuthorById } from '@/data/author';
 import { Pencil } from 'lucide-react';
 import { DeleteButton } from '@/components/ui/DeleteButton';
 import { Badge } from '@/components/ui/badge';
+import { isAdmin } from '@/lib/session';
 
-const articles = await getAllArticles();
+// Get session from locals (set by middleware)
+const session = Astro.locals.session;
+
+// Filter by namespace for non-admin users
+const namespace = isAdmin(session) ? undefined : session.namespace;
+const articles = await getAllArticles(namespace);
 
 // Get authors for each article
 const articlesWithAuthors = await Promise.all(

@@ -1,5 +1,18 @@
 ---
 // Header component
+import { getSession } from '@/lib/session';
+import { LogOut } from 'lucide-react';
+
+const session = await getSession(Astro.cookies);
+const initial = session.name ? session.name.charAt(0).toUpperCase() : 'U';
+
+// Get role label
+const roleLabels = {
+  admin: 'Admin',
+  editor: 'Editor',
+  tourleader: 'Tour Leader',
+};
+const roleLabel = session.role ? roleLabels[session.role] : '';
 ---
 
 <header class="border-b backdrop-blur-md bg-white/80 shadow-sm sticky top-0 z-50">
@@ -10,10 +23,20 @@
     </div>
 
     <div class="flex items-center gap-4">
-      <span class="text-sm text-gray-600">coccus</span>
-      <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background-color: #FF6B35;">
-        <span class="text-sm font-medium text-white">C</span>
+      <div class="text-right">
+        <div class="text-sm font-medium text-gray-800">{session.name}</div>
+        <div class="text-xs text-gray-500">{roleLabel}{session.namespace ? ` • ${session.namespace}` : ''}</div>
       </div>
+      <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background-color: #FF6B35;">
+        <span class="text-sm font-medium text-white">{initial}</span>
+      </div>
+      <a
+        href="/api/auth/logout"
+        class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        title="Logout"
+      >
+        <LogOut class="w-5 h-5 text-gray-600" />
+      </a>
     </div>
   </div>
 </header>

@@ -24,6 +24,67 @@ export async function getAuthorByEmail(email: string) {
   }) as Author | null;
 }
 
+export async function getAuthorByOidcSub(oidcSub: string) {
+  return await collections.authors.findOne({ 
+    oidc_sub: oidcSub 
+  }) as Author | null;
+}
+
+export async function createOrUpdateAuthorFromOidc(data: {
+  oidc_sub: string;
+  email: string;
+  name: string;
+  role: 'admin' | 'editor' | 'tourleader';
+  namespace?: string;
+}) {
+  const now = new Date();
+  
+  // Try to find existing author by OIDC sub or email
+  let author = await getAuthorByOidcSub(data.oidc_sub);
+  
+  if (!author) {
+    author = await getAuthorByEmail(data.email);
+  }
+
+  if (author) {
+    // Update existing author
+    const result = await collections.authors.findOneAndUpdate(
+      { _id: author._id },
+      { 
+        $set: {
+          oidc_sub: data.oidc_sub,
+          email: data.email,
+          name: data.name,
+          role: data.role,
+          namespace: data.namespace,
+          is_admin: data.role === 'admin',
+          is_tour_leader: data.role === 'tourleader',
+          updated_at: now,
+        }
+      },
+      { returnDocument: 'after' }
+    );
+    return result as Author;
+  }
+
+  // Create new author
+  const newAuthor = await collections.authors.insertOne({
+    name: data.name,
+    email: data.email,
+    oidc_sub: data.oidc_sub,
+    role: data.role,
+    namespace: data.namespace,
+    is_admin: data.role === 'admin',
+    is_tour_leader: data.role === 'tourleader',
+    social: [],
+    languages: [],
+    created_at: now,
+    updated_at: now,
+  });
+
+  return await getAuthorById(newAuthor.insertedId.toString()) as Author;
+}
+
 export async function createAuthor(data: CreateAuthor) {
   const now = new Date();
   const result = await collections.authors.insertOne({

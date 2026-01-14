@@ -7,6 +7,9 @@ export const SocialSchema = z.object({
   url: z.string().url(),
 });
 
+// Role enum
+export const RoleSchema = z.enum(['admin', 'editor', 'tourleader']);
+
 export const AuthorSchema = z.object({
   _id: z.instanceof(ObjectId),
   name: z.string().min(1),
@@ -19,6 +22,10 @@ export const AuthorSchema = z.object({
   is_tour_leader: z.boolean().optional(),
   social: z.array(SocialSchema).default([]),
   languages: z.array(z.string()).default([]),
+  // OIDC fields
+  oidc_sub: z.string().optional(), // OIDC subject identifier
+  role: RoleSchema.optional(), // User role from OIDC
+  namespace: z.string().optional(), // Namespace from OIDC role
   created_at: z.date(),
   updated_at: z.date(),
 });
@@ -33,5 +40,6 @@ export const UpdateAuthorSchema = CreateAuthorSchema.partial();
 
 export type Author = z.infer<typeof AuthorSchema>;
 export type Social = z.infer<typeof SocialSchema>;
+export type Role = z.infer<typeof RoleSchema>;
 export type CreateAuthor = z.infer<typeof CreateAuthorSchema>;
 export type UpdateAuthor = z.infer<typeof UpdateAuthorSchema>;
