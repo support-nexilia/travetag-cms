@@ -17,8 +17,8 @@ Collezione per gli autori dei contenuti.
   name: String,
   nickname: String?,
   email: String,  // unique index
-  image: String?,
-  background_image: String?,
+  image: Object?,  // MediaImage (path, sizes)
+  background_image: Object?,  // MediaImage (path, sizes)
   bio: String?,
   is_admin: Boolean,  // default: false
   is_tour_leader: Boolean?,
@@ -64,8 +64,8 @@ Collezione principale per gli articoli. Single collection con discriminazione tr
   title: String,
   subtitle: String?,
   description: String,
-  image: Object?,  // SizedImage (xs, sm, md, lg, xl, source) - PRIMA IMPLEMENTAZIONE: String
-  video_full: Object?,  // VideoFull (url, url_mp4, duration, width, height, public, podcast, meride_embed_id) - PRIMA IMPLEMENTAZIONE: String
+  image: Object?,  // MediaImage (path, sizes)
+  video_full: Object?,  // MediaVideo (path, formats)
   slug: String,  // unique index
   type: String,  // "REMEMBER" | "BOOK_NOW"
   tag_ids: [ObjectId],  // array di ref → Tag
@@ -123,7 +123,7 @@ Collezione principale per gli articoli. Single collection con discriminazione tr
   travelers_newborns_max: Number?,
   
   // BOOKING only - Immagine itinerario
-  itinerary_image: Object?,  // SizedImage - PRIMA IMPLEMENTAZIONE: String
+  itinerary_image: Object?,  // MediaImage (path, sizes)
   
   // BOOKING only - Prodotti opzionali (array embedded)
   optional_products: [
@@ -275,7 +275,7 @@ Collezione per i tag degli articoli.
   name: String,
   slug: String,  // unique index, auto-generato da name
   description: String?,
-  image: Object?,  // SizedImage (xs, sm, md, lg, xl, source) - PRIMA IMPLEMENTAZIONE: String
+  image: Object?,  // MediaImage (path, sizes)
   created_at: Date,
   updated_at: Date
 }
@@ -292,53 +292,47 @@ Collezione per i tag degli articoli.
 
 **Note:**
 - Tag include campo `image` per icona/immagine rappresentativa
-- `image` sarà SizedImage completo in future versioni, String semplice nella prima implementazione
+- `image` è un oggetto MediaImage (path + sizes)
 
 ---
 
 ## Strutture Embedded (Oggetti Complessi)
 
-### VideoFull
-Oggetto per gestire i video completi.
+### MediaVideo
+Oggetto per gestire i video e salvare le reference ai formati.
 
 **Struttura:**
 ```javascript
 {
-  url: String,              // URL video principale
-  url_mp4: String?,         // URL file MP4 (alternativo)
-  duration: Number?,        // Durata in secondi
-  width: Number?,           // Larghezza video
-  height: Number?,          // Altezza video
-  public: Boolean?,         // Se pubblico
-  podcast: Boolean?,        // Se è podcast
-  meride_embed_id: String?  // ID embed Meride (piattaforma video)
+  path: String,             // Path relativo (es. "videos/video.mp4")
+  formats: {
+    m3u: String?,           // URL stream HLS
+    mp4: String?            // URL MP4
+  }
 }
 ```
 
 **Nota implementazione:**
-- **Prima versione CMS**: campo `video_full` sarà String semplice (URL diretto YouTube/Vimeo)
-- **Versioni successive**: oggetto completo con metadata
+- Il CMS salva sempre l'oggetto MediaVideo con i formati disponibili
 
 ---
 
-### SizedImage
-Oggetto per gestire immagini responsive con formati multipli.
+### MediaImage
+Oggetto per gestire immagini e salvare le reference ai formati.
 
 **Struttura:**
 ```javascript
 {
-  xs: { url: String },      // Extra small (mobile)
-  sm: { url: String },      // Small (tablet portrait)
-  md: { url: String },      // Medium (tablet landscape)
-  lg: { url: String },      // Large (desktop)
-  xl: { url: String },      // Extra large (desktop HD)
-  source: { url: String }   // Immagine originale
+  path: String,             // Path relativo (es. "images/image.jpg")
+  sizes: {
+    s: String?,             // URL size small
+    xl: String?             // URL size extra large
+  }
 }
 ```
 
 **Nota implementazione:**
-- **Prima versione CMS**: campi `image`, `itinerary_image` saranno String semplici (URL diretto)
-- **Versioni successive**: upload immagini con generazione automatica dei 6 formati
+- Il CMS salva sempre l'oggetto MediaImage con i formati disponibili
 
 ---
 
@@ -355,7 +349,7 @@ Collezione per gestire gli annunci pubblicitari e contenuti promozionali.
   title: String,
   subtitle: String?,
   description: String?,
-  image: Object?,  // SizedImage - PRIMA IMPLEMENTAZIONE: String
+  image: Object?,  // MediaImage (path, sizes)
   link: String?,  // URL destinazione click
   type: String?,  // "banner" | "popup" | "sidebar" | "newsletter"
   position: String?,  // "home" | "article" | "category" | "tag"
@@ -417,14 +411,14 @@ Singolo documento per configurazioni globali dell'applicazione.
   site_name: String,  // "TravelTag"
   site_description: String?,
   site_url: String,  // "https://traveltag.it"
-  site_logo: Object?,  // SizedImage - PRIMA IMPLEMENTAZIONE: String
+  site_logo: Object?,  // MediaImage (path, sizes)
   site_favicon: String?,
   
   // SEO
   meta_title: String?,
   meta_description: String?,
   meta_keywords: [String]?,
-  og_image: Object?,  // SizedImage - PRIMA IMPLEMENTAZIONE: String
+  og_image: Object?,  // MediaImage (path, sizes)
   
   // Social
   social_facebook: String?,
@@ -510,7 +504,7 @@ Collezione per gestire le notifiche push dell'app.
   // Contenuto notifica
   title: String,              // Titolo notifica
   body: String,               // Corpo/messaggio notifica
-  image: String?,             // URL immagine (opzionale)
+  image: Object?,             // MediaImage (path, sizes)
   
   // Target
   target_type: String,        // "all" | "user" | "segment"
@@ -638,8 +632,8 @@ Collezione per gestire le notifiche push dell'app.
 
 **Rispetto al modello Firestore originale:**
 - ✅ Mantenuti TUTTI i campi originali
-- ✅ Struttura `SizedImage` mantenuta (xs, sm, md, lg, xl, source) - **PRIMA IMPLEMENTAZIONE: String semplice**
-- ✅ Struttura `VideoFull` mantenuta (url, url_mp4, duration, etc.) - **PRIMA IMPLEMENTAZIONE: String semplice**
+- ✅ Struttura `MediaImage` con `path` e `sizes` (s, xl)
+- ✅ Struttura `MediaVideo` con `path` e `formats` (m3u, mp4)
 - ✅ Tutti i campi title/body separati mantenuti (8 sezioni)
 - ✅ Campo `type_of_trip_items` mantenuto (mappa caratteristiche viaggio)
 - ✅ Campo `description_HTML` REMEMBER mantenuto
@@ -649,5 +643,5 @@ Collezione per gestire le notifiche push dell'app.
 - ✅ Mantenuto `itinerary_items[]` per tappe viaggio
 
 **Note implementazione:**
-- Nella **prima versione** del CMS, i campi `image`, `video_full`, `itinerary_image` saranno implementati come **String** semplici (URL diretti)
-- In **versioni successive** si implementerà il caricamento immagini con generazione automatica di formati multipli (xs, sm, md, lg, xl)
+- I campi media (`image`, `video_full`, `itinerary_image`, `og_image`, `site_logo`) salvano sempre oggetti MediaImage/MediaVideo con path e URL dei formati
+- In **versioni successive** si potranno aggiungere nuovi formati in `sizes`/`formats` senza cambiare il modello

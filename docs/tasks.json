@@ -125,6 +125,48 @@
       "title": "Integrazione CronJob con Post/Adv",
       "description": "Implementare creazione automatica CronJob quando Post/Adv vengono impostati con status planned",
       "completed": false
+    },
+    {
+      "id": 22,
+      "title": "Definizione modello MediaImage/MediaVideo",
+      "description": "Aggiungere tipi/interfacce per MediaImage e MediaVideo nel layer entities/data, allineati al modello (path, sizes/formats)",
+      "completed": false
+    },
+    {
+      "id": 23,
+      "title": "Service presigned upload",
+      "description": "Creare servizio per generare presigned URL verso hetzner object storage e salvare upload temporanei in /tmp",
+      "completed": false
+    },
+    {
+      "id": 24,
+      "title": "Service finalize media (move to final path)",
+      "description": "Implementare spostamento da /tmp a /images|/videos/{entity}/{id}/{field}/file.ext e ritorno oggetto MediaImage/MediaVideo",
+      "completed": false
+    },
+    {
+      "id": 25,
+      "title": "Integrazione Bunny Stream per video",
+      "description": "Creare service che invia la signed URL a Bunny Stream e costruisce formats (m3u/mp4) con optimistic update",
+      "completed": false
+    },
+    {
+      "id": 26,
+      "title": "Integrazione Bunny Optimizer per immagini",
+      "description": "Definire basepath delivery e generare sizes con query string optimizer (es. s, m, l, xl)",
+      "completed": false
+    },
+    {
+      "id": 27,
+      "title": "API controller media",
+      "description": "Aggiungere endpoint per presigned upload e finalize media da usare nei form (UI -> BE -> service)",
+      "completed": false
+    },
+    {
+      "id": 28,
+      "title": "Integrazione upload media nei form",
+      "description": "Aggiornare i form (es. Article/Adv/Tag/Author/AppSettings) per usare presigned upload, finalize e salvare MediaImage/MediaVideo nel db",
+      "completed": false
     }
   ]
 }

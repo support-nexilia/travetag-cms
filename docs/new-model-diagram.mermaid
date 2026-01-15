@@ -4,8 +4,8 @@ erDiagram
         string name
         string nickname
         string email UK
-        string image
-        string background_image
+        string image "MediaImage object"
+        string background_image "MediaImage object"
         string bio
         boolean is_admin
         boolean is_tour_leader
@@ -21,8 +21,8 @@ erDiagram
         string title
         string subtitle
         string description
-        string image "SizedImage object"
-        string video_full "VideoFull object"
+        string image "MediaImage object"
+        string video_full "MediaVideo object"
         string slug UK
         string type "REMEMBER or BOOK_NOW"
         string tag_ids "Array of ObjectIds"
@@ -58,7 +58,7 @@ erDiagram
         string type_of_trip_title "BOOKING only"
         string type_of_trip_body_HTML "BOOKING only"
         string type_of_trip_items "Map object BOOKING only"
-        string itinerary_image "SizedImage BOOKING only"
+        string itinerary_image "MediaImage BOOKING only"
         int max_booking_num "BOOKING only"
         float price_adults "BOOKING only"
         float price_children "BOOKING only"
@@ -103,24 +103,16 @@ erDiagram
         string url
     }
 
-    VideoFull {
-        string url
-        string url_mp4
-        float duration
-        int width
-        int height
-        boolean public
-        boolean podcast
-        string meride_embed_id
+    MediaVideo {
+        string path "Relative path"
+        string formats_m3u "HLS URL"
+        string formats_mp4 "MP4 URL"
     }
 
-    SizedImage {
-        string xs "URL extra small"
-        string sm "URL small"
-        string md "URL medium"
-        string lg "URL large"
-        string xl "URL extra large"
-        string source "URL original"
+    MediaImage {
+        string path "Relative path"
+        string sizes_s "Small URL"
+        string sizes_xl "Extra large URL"
     }
 
     Category {
@@ -137,7 +129,7 @@ erDiagram
         string name
         string slug UK
         string description
-        string image "SizedImage object"
+        string image "MediaImage object"
         datetime created_at
         datetime updated_at
     }
@@ -146,10 +138,10 @@ erDiagram
     Author ||--o{ Article : "tour_leader_id"
     Article }o--o{ Category : "category_id"
     Article }o--o{ Tag : "tag_ids array"
-    Article ||--|| VideoFull : "embeds video_full"
-    Article ||--|| SizedImage : "embeds image"
-    Article ||--|| SizedImage : "embeds itinerary_image"
+    Article ||--|| MediaVideo : "embeds video_full"
+    Article ||--|| MediaImage : "embeds image"
+    Article ||--|| MediaImage : "embeds itinerary_image"
     Article ||--|{ Product : "embeds optional_products array"
     Article ||--|{ ItineraryItem : "embeds itinerary_items array"
     Author ||--|{ Social : "embeds social array"
-    Tag ||--|| SizedImage : "embeds image"
+    Tag ||--|| MediaImage : "embeds image"

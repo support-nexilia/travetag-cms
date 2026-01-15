@@ -18,6 +18,11 @@ interface ImportMetaEnv {
   readonly GRAPHQL_JWT_ISSUER: string;
   readonly GRAPHQL_JWT_DISCOVERY_URL: string;
   readonly GRAPHQL_AUTH_DEBUG: string;
+  readonly HOST_URL: string;
+  readonly BASEURL_MEDIA: string;
+  readonly BUNNY_STREAM_API_KEY: string;
+  readonly BUNNY_STREAM_LIBRARY_ID: string;
+  readonly BUNNY_STREAM_CDN_URL: string;
 }
 
 interface ImportMeta {
