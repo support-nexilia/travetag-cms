@@ -1,6 +1,7 @@
 import type { AstroCookies } from 'astro';
 import type { Role } from '@/entities/author';
 import jwt from 'jsonwebtoken';
+import { IS_PROD, SESSION_SECRET } from '@/lib/env';
 
 export interface SessionData {
   authorId: string;
@@ -11,7 +12,7 @@ export interface SessionData {
   isLoggedIn: boolean;
 }
 
-const JWT_SECRET = import.meta.env.SESSION_SECRET;
+const JWT_SECRET = SESSION_SECRET;
 const COOKIE_NAME = 'traveltag_session';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
@@ -51,7 +52,7 @@ export async function setSession(
 
   cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: import.meta.env.PROD,
+    secure: IS_PROD,
     sameSite: 'lax',
     maxAge: COOKIE_MAX_AGE,
     path: '/',

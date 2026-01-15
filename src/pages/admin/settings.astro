@@ -3,6 +3,7 @@ import MainLayout from '@/layouts/MainLayout.astro';
 import { getAppSettings, initializeAppSettings } from '@/data/app-settings';
 import { SectionsSelector } from '@/components/form/SectionsSelector';
 import { FormFeedback } from '@/components/FormFeedback';
+import MediaUploadField from '@/components/form/MediaUploadField.astro';
 
 let settings = await getAppSettings();
 if (!settings) {
@@ -59,20 +60,14 @@ const availableSections = [
               <p class="text-xs text-gray-500 mt-1">Testo descrittivo per la sezione Traveltaggers</p>
             </div>
 
-            <div>
-              <label for="video_full" class="block text-sm font-medium text-gray-700 mb-2">
-                URL Video Principale
-              </label>
-              <input
-                type="url"
-                id="video_full"
-                name="video_full"
-                value={typeof settings.video_full === 'string' ? settings.video_full : settings.video_full?.url || ''}
-                placeholder="https://youtube.com/watch?v=..."
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
-              />
-              <p class="text-xs text-gray-500 mt-1">Video principale mostrato nell'app</p>
-            </div>
+            <MediaUploadField
+              id="video_full_file"
+              label="Video Principale"
+              accept="video/*"
+              previewUrl={settings.video_full?.formats?.mp4 || settings.video_full?.formats?.m3u}
+              previewType="video"
+              helperText="Video principale mostrato nell'app"
+            />
           </div>
         </div>
 
@@ -232,7 +227,17 @@ const availableSections = [
       updateFeedback({ isLoading: true, success: null, error: null });
       
       const formData = new FormData(form);
+      const fileFields = new Set(['video_full_file']);
+      const mediaUploads = [];
       
+      formData.forEach((value, key) => {
+        if (fileFields.has(key)) {
+          if (value instanceof File && value.size > 0) {
+            mediaUploads.push({ key, file: value });
+          }
+        }
+      });
+
       // Parse main_sections_order from array inputs
       const sectionsOrder = [];
       let i = 0;
@@ -246,9 +251,6 @@ const availableSections = [
         main_sections_order: sectionsOrder.length > 0 ? sectionsOrder : ['main', 'adv', 'chat'],
       };
       
-      if (formData.get('video_full')) {
-        data.video_full = formData.get('video_full');
-      }
       if (formData.get('traveltaggers_description')) {
         data.traveltaggers_description = formData.get('traveltaggers_description');
       }
@@ -269,6 +271,54 @@ const availableSections = [
         max: parseInt(formData.get('children_age_max')) || 12,
       };
       
+      const uploadMedia = async (entityId, upload) => {
+        const presignResponse = await fetch('/admin/api/media/presign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: upload.file.name,
+            contentType: upload.file.type,
+          }),
+        });
+
+        if (!presignResponse.ok) {
+          throw new Error('Impossibile generare la presigned URL');
+        }
+
+        const presign = await presignResponse.json();
+
+        const uploadResponse = await fetch(presign.uploadUrl, {
+          method: 'PUT',
+          headers: presign.headers,
+          body: upload.file,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error('Upload media fallito');
+        }
+
+        const finalizeResponse = await fetch('/admin/api/media/finalize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mediaType: 'video',
+            tmpKey: presign.key,
+            entity: 'settings',
+            entityId,
+            field: 'video_full',
+            filename: upload.file.name,
+            contentType: upload.file.type,
+          }),
+        });
+
+        if (!finalizeResponse.ok) {
+          throw new Error('Finalize media fallito');
+        }
+
+        const finalize = await finalizeResponse.json();
+        return finalize.media;
+      };
+
       try {
         const response = await fetch('/admin/api/settings', {
           method: 'PUT',
@@ -281,6 +331,16 @@ const availableSections = [
         isLoading = false;
         
         if (response.ok) {
+          if (mediaUploads.length > 0) {
+            const media = await uploadMedia('app_settings', mediaUploads[0]);
+            if (media) {
+              await fetch('/admin/api/settings', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ video_full: media }),
+              });
+            }
+          }
           updateFeedback({ 
             isLoading: false, 
             success: { 

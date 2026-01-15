@@ -6,11 +6,28 @@ import { TagSelector } from './TagSelector';
 import { CategorySelector } from './CategorySelector';
 import TypesRepeater from './TypesRepeater';
 import RichTextEditor from './RichTextEditor';
+import { MediaUploadField } from './MediaUploadField';
 
 interface Author {
   _id: string;
   name: string;
 }
+
+type MediaImage = {
+  path: string;
+  sizes?: {
+    s?: string;
+    xl?: string;
+  };
+};
+
+type MediaVideo = {
+  path: string;
+  formats?: {
+    m3u?: string;
+    mp4?: string;
+  };
+};
 
 interface Article {
   _id?: string;
@@ -23,8 +40,10 @@ interface Article {
   tour_leader_id?: string;
   status: 'DRAFT' | 'PUBLISHED';
   published_date: Date;
-  image_hero?: string;
-  video_full?: string;
+  image?: MediaImage;
+  image_hero?: MediaImage;
+  video_full?: MediaVideo;
+  itinerary_image?: MediaImage;
   [key: string]: any;
 }
 
@@ -48,6 +67,10 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
 
   const isBookNow = articleType === 'BOOK_NOW';
   const isRemember = articleType === 'REMEMBER';
+  const imagePreview = article?.image?.sizes?.s || article?.image?.sizes?.xl;
+  const imageHeroPreview = article?.image_hero?.sizes?.s || article?.image_hero?.sizes?.xl;
+  const itineraryPreview = article?.itinerary_image?.sizes?.s || article?.itinerary_image?.sizes?.xl;
+  const videoPreview = article?.video_full?.formats?.mp4 || article?.video_full?.formats?.m3u;
 
   // Auto-generate slug from title
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -206,47 +229,27 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">
-            URL Immagine Principale
-          </label>
-          <input
-            type="url"
-            id="image"
-            name="image"
-            defaultValue={article?.image}
-            placeholder="https://..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
-          />
-        </div>
+        <MediaUploadField
+          id="image_file"
+          label="Immagine Principale"
+          accept="image/*"
+          previewUrl={imagePreview}
+        />
 
-        <div>
-          <label htmlFor="image_hero" className="block text-sm font-medium text-gray-700 mb-2">
-            URL Immagine Hero
-          </label>
-          <input
-            type="url"
-            id="image_hero"
-            name="image_hero"
-            defaultValue={article?.image_hero}
-            placeholder="https://..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
-          />
-        </div>
+        <MediaUploadField
+          id="image_hero_file"
+          label="Immagine Hero"
+          accept="image/*"
+          previewUrl={imageHeroPreview}
+        />
 
-        <div>
-          <label htmlFor="video_full" className="block text-sm font-medium text-gray-700 mb-2">
-            URL Video
-          </label>
-          <input
-            type="url"
-            id="video_full"
-            name="video_full"
-            defaultValue={article?.video_full}
-            placeholder="https://..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
-          />
-        </div>
+        <MediaUploadField
+          id="video_full_file"
+          label="Video"
+          accept="video/*"
+          previewUrl={videoPreview}
+          previewType="video"
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -448,19 +451,12 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="itinerary_image" className="block text-sm font-medium text-gray-700 mb-2">
-                URL Immagine Itinerario
-              </label>
-              <input
-                type="url"
-                id="itinerary_image"
-                name="itinerary_image"
-                defaultValue={article?.itinerary_image}
-                placeholder="https://..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
-              />
-            </div>
+            <MediaUploadField
+              id="itinerary_image_file"
+              label="Immagine Itinerario"
+              accept="image/*"
+              previewUrl={itineraryPreview}
+            />
 
             <div>
               <label htmlFor="stripe_product_id" className="block text-sm font-medium text-gray-700 mb-2">

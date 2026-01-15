@@ -1,7 +1,8 @@
 import { MongoClient, Db } from 'mongodb';
+import { IS_PROD, MONGO_DB_NAME, MONGO_URI } from '@/lib/env';
 
-const uri = (typeof import.meta !== 'undefined' && import.meta.env?.MONGO_URI) || process.env.MONGO_URI;
-const dbName = (typeof import.meta !== 'undefined' && import.meta.env?.MONGO_DB_NAME) || process.env.MONGO_DB_NAME;
+const uri = MONGO_URI;
+const dbName = MONGO_DB_NAME;
 
 if (!uri) {
   throw new Error('MONGO_URI environment variable is not defined');
@@ -20,7 +21,7 @@ const globalForMongo = globalThis as unknown as {
 let client: MongoClient;
 let db: Db;
 
-const isProd = (typeof import.meta !== 'undefined' && import.meta.env?.PROD) || process.env.NODE_ENV === 'production';
+const isProd = IS_PROD;
 
 if (isProd) {
   client = new MongoClient(uri);

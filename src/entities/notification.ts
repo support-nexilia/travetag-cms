@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ObjectId } from 'mongodb';
+import { MediaImageSchema } from './media';
 
 // Enum schemas
 export const NotificationTargetTypeSchema = z.enum(['all', 'user', 'segment']);
@@ -13,7 +14,7 @@ export const NotificationSchema = z.object({
   // Content
   title: z.string().min(1, 'Title is required'),
   body: z.string().min(1, 'Body is required'),
-  image: z.string().url().optional(),
+  image: MediaImageSchema.optional(),
   
   // Target
   target_type: NotificationTargetTypeSchema,

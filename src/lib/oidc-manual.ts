@@ -1,4 +1,10 @@
 import type { Role } from '@/entities/author';
+import {
+  OIDC_CLIENT_ID,
+  OIDC_CLIENT_SECRET,
+  OIDC_ISSUER,
+  OIDC_REDIRECT_URI,
+} from '@/lib/env';
 
 export interface ParsedRole {
   role: Role;
@@ -22,7 +28,7 @@ async function getOIDCConfig(): Promise<OIDCConfig> {
     return cachedConfig;
   }
 
-  const discoveryUrl = `${import.meta.env.OIDC_ISSUER}/.well-known/openid-configuration`;
+  const discoveryUrl = `${OIDC_ISSUER}/.well-known/openid-configuration`;
   const response = await fetch(discoveryUrl);
   
   if (!response.ok) {
@@ -67,8 +73,8 @@ export async function getAuthorizationUrl(state: string): Promise<{ url: string;
   const codeChallenge = await generateCodeChallenge(codeVerifier);
 
   const params = new URLSearchParams({
-    client_id: import.meta.env.OIDC_CLIENT_ID,
-    redirect_uri: import.meta.env.OIDC_REDIRECT_URI,
+    client_id: OIDC_CLIENT_ID,
+    redirect_uri: OIDC_REDIRECT_URI,
     response_type: 'code',
     scope: 'openid email profile roles',
     state,
@@ -100,9 +106,9 @@ export async function handleCallback(
   const tokenParams = new URLSearchParams({
     grant_type: 'authorization_code',
     code,
-    redirect_uri: import.meta.env.OIDC_REDIRECT_URI,
-    client_id: import.meta.env.OIDC_CLIENT_ID,
-    client_secret: import.meta.env.OIDC_CLIENT_SECRET,
+    redirect_uri: OIDC_REDIRECT_URI,
+    client_id: OIDC_CLIENT_ID,
+    client_secret: OIDC_CLIENT_SECRET,
     code_verifier: codeVerifier,
   });
 

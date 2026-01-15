@@ -1,11 +1,13 @@
 import { z } from 'zod';
 import { ObjectId } from 'mongodb';
+import { MediaImageSchema } from './media';
 
 export const TagSchema = z.object({
   _id: z.instanceof(ObjectId),
   name: z.string().min(1).max(100),
   slug: z.string().min(1),
   description: z.string().max(500).optional(),
+  image: MediaImageSchema.optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });

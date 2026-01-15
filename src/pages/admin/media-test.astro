@@ -1,0 +1,179 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import MediaUploadField from '@/components/form/MediaUploadField.astro';
+---
+
+<MainLayout title="Media Test">
+  <div class="p-8">
+    <div class="max-w-3xl mx-auto">
+      <h1 class="text-3xl font-bold text-gray-800 mb-6">Test Upload Media</h1>
+
+      <form id="mediaTestForm" class="bg-white/80 backdrop-blur-md rounded-xl p-6 shadow-lg border border-white/20 space-y-6">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="mediaType" class="block text-sm font-medium text-gray-700 mb-2">
+              Tipo Media
+            </label>
+            <select
+              id="mediaType"
+              name="mediaType"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+            >
+              <option value="image">Immagine</option>
+              <option value="video">Video</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="entity" class="block text-sm font-medium text-gray-700 mb-2">
+              Entity
+            </label>
+            <input
+              type="text"
+              id="entity"
+              name="entity"
+              value="test"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+            />
+          </div>
+
+          <div>
+            <label for="entityId" class="block text-sm font-medium text-gray-700 mb-2">
+              Entity ID
+            </label>
+            <input
+              type="text"
+              id="entityId"
+              name="entityId"
+              value="test-id"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+            />
+          </div>
+
+          <div>
+            <label for="field" class="block text-sm font-medium text-gray-700 mb-2">
+              Field
+            </label>
+            <input
+              type="text"
+              id="field"
+              name="field"
+              value="media"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+            />
+          </div>
+        </div>
+
+        <MediaUploadField
+          id="file"
+          label="File"
+          accept="image/*,video/*"
+          helperText="Seleziona un file immagine o video per testare presign + finalize"
+        />
+
+        <div class="flex gap-3">
+          <button
+            type="submit"
+            class="flex-1 px-4 py-2 bg-[#FF6B35] text-white rounded-lg hover:bg-[#ff8555] transition-colors"
+          >
+            Carica e Finalizza
+          </button>
+          <button
+            type="button"
+            id="resetOutput"
+            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+          >
+            Pulisci Output
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-6">
+        <h2 class="text-lg font-semibold text-gray-700 mb-2">Output</h2>
+        <pre id="output" class="bg-gray-900 text-gray-100 text-xs rounded-lg p-4 overflow-auto min-h-[160px]"></pre>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline>
+    const form = document.getElementById('mediaTestForm');
+    const output = document.getElementById('output');
+    const resetOutput = document.getElementById('resetOutput');
+
+    const writeOutput = (payload) => {
+      output.textContent = typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2);
+    };
+
+    resetOutput.addEventListener('click', () => writeOutput(''));
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const file = formData.get('file');
+
+      if (!(file instanceof File) || file.size === 0) {
+        writeOutput('Seleziona un file prima di continuare.');
+        return;
+      }
+
+      const mediaType = formData.get('mediaType');
+      const entity = formData.get('entity');
+      const entityId = formData.get('entityId');
+      const field = formData.get('field');
+
+      try {
+        writeOutput('Genero presigned URL...');
+        const presignResponse = await fetch('/admin/api/media/presign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: file.name,
+            contentType: file.type,
+          }),
+        });
+
+        if (!presignResponse.ok) {
+          throw new Error('Presign fallito');
+        }
+
+        const presign = await presignResponse.json();
+
+        writeOutput('Upload in corso...');
+        const uploadResponse = await fetch(presign.uploadUrl, {
+          method: 'PUT',
+          headers: presign.headers,
+          body: file,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error('Upload fallito');
+        }
+
+        writeOutput('Finalize in corso...');
+        const finalizeResponse = await fetch('/admin/api/media/finalize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mediaType,
+            tmpKey: presign.key,
+            entity,
+            entityId,
+            field,
+            filename: file.name,
+            contentType: file.type,
+          }),
+        });
+
+        if (!finalizeResponse.ok) {
+          throw new Error('Finalize fallito');
+        }
+
+        const finalize = await finalizeResponse.json();
+        writeOutput(finalize);
+      } catch (error) {
+        writeOutput(`Errore: ${error.message || error}`);
+      }
+    });
+  </script>
+</MainLayout>

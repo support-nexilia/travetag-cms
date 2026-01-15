@@ -1,21 +1,10 @@
 import { z } from 'zod';
+import { MediaVideoSchema } from './media';
 
 // TypeAge schema
 export const TypeAgeSchema = z.object({
   min: z.number().optional(),
   max: z.number().optional(),
-});
-
-// VideoFull schema
-export const VideoFullSchema = z.object({
-  url: z.string().optional(),
-  url_mp4: z.string().optional(),
-  duration: z.number().optional(),
-  width: z.number().optional(),
-  height: z.number().optional(),
-  public: z.boolean().optional(),
-  podcast: z.boolean().optional(),
-  meride_embed_id: z.string().optional(),
 });
 
 // Schema per AppSettings - configurazione globale applicazione
@@ -38,7 +27,7 @@ export const AppSettingsSchema = z.object({
   main_sections_order: z.array(z.string()).optional(), // ["main", "adv", "chat"]
 
   // Video principale
-  video_full: z.union([z.string(), VideoFullSchema]).optional(), // PRIMA IMPLEMENTAZIONE: String (URL) - FUTURO: VideoFull object
+  video_full: MediaVideoSchema.optional(),
 
   created_at: z.date().optional(),
   updated_at: z.date().optional(),
@@ -46,7 +35,6 @@ export const AppSettingsSchema = z.object({
 
 export type AppSettings = z.infer<typeof AppSettingsSchema>;
 export type TypeAge = z.infer<typeof TypeAgeSchema>;
-export type VideoFull = z.infer<typeof VideoFullSchema>;
 
 // Export singolo per chiarezza
 export default AppSettingsSchema;

@@ -6,14 +6,12 @@ import { createPublicKey } from 'crypto';
 import { typeDefs } from '@/graphql/typeDefs';
 import { resolvers } from '@/graphql/resolvers';
 import { createOrUpdateUserFromJwt } from '@/data/user';
-
-const ENABLE_PLAYGROUND = import.meta.env.ENABLE_PLAYGROUND.toLowerCase() === 'true';
-const GRAPHQL_JWT_ISSUER =
-  import.meta.env.GRAPHQL_JWT_ISSUER ?? 'http://nexilia-club.localhost:4322';
-const GRAPHQL_JWT_DISCOVERY_URL =
-  import.meta.env.GRAPHQL_JWT_DISCOVERY_URL ??
-  `${GRAPHQL_JWT_ISSUER}/.well-known/openid-configuration`;
-const GRAPHQL_AUTH_DEBUG = import.meta.env.GRAPHQL_AUTH_DEBUG === 'true';
+import {
+  ENABLE_PLAYGROUND,
+  GRAPHQL_AUTH_DEBUG,
+  GRAPHQL_JWT_DISCOVERY_URL,
+  GRAPHQL_JWT_ISSUER,
+} from '@/lib/env';
 
 type Jwk = {
   kid?: string;

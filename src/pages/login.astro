@@ -1,5 +1,6 @@
 ---
 import { getAuthorizationUrl } from '@/lib/oidc-manual';
+import { IS_PROD } from '@/lib/env';
 
 // Generate state for CSRF protection
 function randomString(length: number = 32): string {
@@ -21,14 +22,14 @@ const { url: authUrl, codeVerifier } = await getAuthorizationUrl(state);
 // Store state and code verifier in cookies for validation in callback
 Astro.cookies.set('oidc_state', state, {
   httpOnly: true,
-  secure: import.meta.env.PROD,
+  secure: IS_PROD,
   sameSite: 'lax',
   maxAge: 60 * 10, // 10 minutes
 });
 
 Astro.cookies.set('oidc_code_verifier', codeVerifier, {
   httpOnly: true,
-  secure: import.meta.env.PROD,
+  secure: IS_PROD,
   sameSite: 'lax',
   maxAge: 60 * 10, // 10 minutes
 });

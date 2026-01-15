@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ObjectId } from 'mongodb';
+import { MediaImageSchema } from './media';
 
 // Social object schema
 export const SocialSchema = z.object({
@@ -15,8 +16,8 @@ export const AuthorSchema = z.object({
   name: z.string().min(1),
   nickname: z.string().optional(),
   email: z.string().email(),
-  image: z.string().optional(),
-  background_image: z.string().optional(),
+  image: MediaImageSchema.optional(),
+  background_image: MediaImageSchema.optional(),
   bio: z.string().optional(),
   is_admin: z.boolean().default(false),
   is_tour_leader: z.boolean().optional(),

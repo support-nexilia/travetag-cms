@@ -1,9 +1,10 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
 import ComponentShowcase from '@/components/demo/ComponentShowcase';
+import { IS_PROD } from '@/lib/env';
 
 // Solo in dev mode
-if (import.meta.env.PROD) {
+if (IS_PROD) {
   return Astro.redirect('/admin');
 }
 ---

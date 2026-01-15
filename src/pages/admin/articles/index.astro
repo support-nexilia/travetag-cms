@@ -15,6 +15,8 @@ const namespace = isAdmin(session) ? undefined : session.namespace;
 const articles = await getAllArticles(namespace);
 
 // Get authors for each article
+const getImageUrl = (image) => image?.sizes?.s || image?.sizes?.xl || '';
+
 const articlesWithAuthors = await Promise.all(
   articles.map(async (article) => {
     const author = await getAuthorById(article.author_id.toString());
@@ -52,9 +54,9 @@ const articlesWithAuthors = await Promise.all(
             <tr class="hover:bg-gray-50/50 transition-colors">
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
-                  {article.image && (
+                  {getImageUrl(article.image) && (
                     <img 
-                      src={article.image} 
+                      src={getImageUrl(article.image)} 
                       alt={article.title} 
                       class="w-16 h-16 rounded-lg object-cover"
                     />

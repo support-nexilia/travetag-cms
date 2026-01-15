@@ -23,6 +23,8 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@aws-sdk/client-s3": "^3.890.0",
+    "@aws-sdk/s3-request-presigner": "^3.890.0",
     "astro": "^5.16.8",
     "autoprefixer": "^10.4.23",
     "class-variance-authority": "^0.7.1",

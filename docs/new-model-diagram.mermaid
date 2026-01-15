@@ -4,7 +4,7 @@ erDiagram
         string name
         string nickname
         string email UK
-        string image "MediaImage object"
+        string image "MediaImage object (SVG icon)"
         string background_image "MediaImage object"
         string bio
         boolean is_admin
@@ -144,4 +144,4 @@ erDiagram
     Article ||--|{ Product : "embeds optional_products array"
     Article ||--|{ ItineraryItem : "embeds itinerary_items array"
     Author ||--|{ Social : "embeds social array"
-    Tag ||--|| MediaImage : "embeds image"
+    Tag ||--|| MediaImage : "embeds image (SVG)"

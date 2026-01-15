@@ -17,7 +17,7 @@ Collezione per gli autori dei contenuti.
   name: String,
   nickname: String?,
   email: String,  // unique index
-  image: Object?,  // MediaImage (path, sizes)
+  image: Object?,  // MediaImage (path, sizes) - Tag usa SVG
   background_image: Object?,  // MediaImage (path, sizes)
   bio: String?,
   is_admin: Boolean,  // default: false
@@ -292,7 +292,7 @@ Collezione per i tag degli articoli.
 
 **Note:**
 - Tag include campo `image` per icona/immagine rappresentativa
-- `image` è un oggetto MediaImage (path + sizes)
+- `image` è un oggetto MediaImage (path + sizes) e accetta SVG
 
 ---
 
@@ -333,6 +333,7 @@ Oggetto per gestire immagini e salvare le reference ai formati.
 
 **Nota implementazione:**
 - Il CMS salva sempre l'oggetto MediaImage con i formati disponibili
+- Per SVG (icone Tag) si usa il file originale senza optimizer
 
 ---
 

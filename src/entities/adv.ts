@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { MediaImageSchema } from './media';
 
 // Enum types
 export const AdvTypeSchema = z.enum(['banner', 'popup', 'sidebar', 'newsletter']);
@@ -10,7 +11,7 @@ export const AdvSchema = z.object({
   title: z.string().min(1).max(255),
   subtitle: z.string().max(255).optional(),
   description: z.string().optional(),
-  image: z.string().optional(), // PRIMA IMPLEMENTAZIONE: String (URL) - FUTURO: SizedImage
+  image: MediaImageSchema.optional(),
   link: z.string().url().optional(),
   type: AdvTypeSchema.optional(),
   position: AdvPositionSchema.optional(),

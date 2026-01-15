@@ -2,12 +2,17 @@
 import MainLayout from '@/layouts/MainLayout.astro';
 import { getAuthorById } from '@/data/author';
 import { FormFeedback } from '@/components/FormFeedback';
+import MediaUploadField from '@/components/form/MediaUploadField.astro';
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect('/admin/authors');
 
 const author = await getAuthorById(id);
 if (!author) return Astro.redirect('/admin/authors');
+
+const imageUrl = author.image?.sizes?.s || author.image?.sizes?.xl || '';
+const backgroundImageUrl =
+  author.background_image?.sizes?.s || author.background_image?.sizes?.xl || '';
 ---
 
 <MainLayout title={`Modifica ${author.name}`}>
@@ -76,36 +81,19 @@ if (!author) return Astro.redirect('/admin/authors');
 
         <!-- Immagini -->
         <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label for="image" class="block text-sm font-medium text-gray-700 mb-2">
-              URL Immagine Profilo
-            </label>
-            <input
-              type="url"
-              id="image"
-              name="image"
-              value={author.image || ''}
-              placeholder="https://..."
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
-            />
-            {author.image && (
-              <img src={author.image} alt="Preview" class="mt-2 w-20 h-20 rounded-full object-cover" />
-            )}
-          </div>
+          <MediaUploadField
+            id="image_file"
+            label="Immagine Profilo"
+            accept="image/*"
+            previewUrl={imageUrl}
+          />
 
-          <div>
-            <label for="background_image" class="block text-sm font-medium text-gray-700 mb-2">
-              URL Immagine Sfondo
-            </label>
-            <input
-              type="url"
-              id="background_image"
-              name="background_image"
-              value={author.background_image || ''}
-              placeholder="https://..."
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
-            />
-          </div>
+          <MediaUploadField
+            id="background_image_file"
+            label="Immagine Sfondo"
+            accept="image/*"
+            previewUrl={backgroundImageUrl}
+          />
         </div>
 
         <!-- Ruolo e Namespace -->
@@ -268,6 +256,8 @@ if (!author) return Astro.redirect('/admin/authors');
       updateFeedback({ isLoading: true, success: null, error: null });
       
       const formData = new FormData(form);
+      const fileFields = new Set(['image_file', 'background_image_file']);
+      const mediaUploads = [];
       
       // Collect languages
       const languages = [];
@@ -283,19 +273,81 @@ if (!author) return Astro.redirect('/admin/authors');
         }
       }
       
+      formData.forEach((value, key) => {
+        if (fileFields.has(key)) {
+          if (value instanceof File && value.size > 0) {
+            mediaUploads.push({ key, file: value });
+          }
+        }
+      });
+
       const data = {
         name: formData.get('name'),
         nickname: formData.get('nickname') || undefined,
         email: formData.get('email'),
         bio: formData.get('bio') || undefined,
-        image: formData.get('image') || undefined,
-        background_image: formData.get('background_image') || undefined,
+        
         role: formData.get('role'),
         namespace: formData.get('namespace') || undefined,
         languages,
         social,
       };
       
+      const uploadMedia = async (entityId, upload) => {
+        const fieldMap = {
+          image_file: 'image',
+          background_image_file: 'background_image',
+        };
+        const field = fieldMap[upload.key];
+        if (!field) return null;
+
+        const presignResponse = await fetch('/admin/api/media/presign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: upload.file.name,
+            contentType: upload.file.type,
+          }),
+        });
+
+        if (!presignResponse.ok) {
+          throw new Error('Impossibile generare la presigned URL');
+        }
+
+        const presign = await presignResponse.json();
+
+        const uploadResponse = await fetch(presign.uploadUrl, {
+          method: 'PUT',
+          headers: presign.headers,
+          body: upload.file,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error('Upload media fallito');
+        }
+
+        const finalizeResponse = await fetch('/admin/api/media/finalize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mediaType: 'image',
+            tmpKey: presign.key,
+            entity: 'author',
+            entityId,
+            field,
+            filename: upload.file.name,
+            contentType: upload.file.type,
+          }),
+        });
+
+        if (!finalizeResponse.ok) {
+          throw new Error('Finalize media fallito');
+        }
+
+        const finalize = await finalizeResponse.json();
+        return { field, media: finalize.media };
+      };
+
       try {
         const response = await fetch(`/admin/api/authors/${authorId}`, {
           method: 'PUT',
@@ -308,6 +360,22 @@ if (!author) return Astro.redirect('/admin/authors');
         isLoading = false;
         
         if (response.ok) {
+          if (mediaUploads.length > 0) {
+            const mediaUpdates = {};
+            for (const upload of mediaUploads) {
+              const result = await uploadMedia(authorId, upload);
+              if (result) {
+                mediaUpdates[result.field] = result.media;
+              }
+            }
+            if (Object.keys(mediaUpdates).length > 0) {
+              await fetch(`/admin/api/authors/${authorId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(mediaUpdates),
+              });
+            }
+          }
           updateFeedback({ 
             isLoading: false, 
             success: { 

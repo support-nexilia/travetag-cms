@@ -9,6 +9,8 @@ interface ImportMetaEnv {
   readonly OBJECT_STORAGE_ACCESS_KEY: string;
   readonly OBJECT_STORAGE_SECRET_KEY: string;
   readonly OBJECT_STORAGE_ENDPOINT: string;
+  readonly OBJECT_STORAGE_BUCKET: string;
+  readonly OBJECT_STORAGE_REGION: string;
   readonly ENABLE_PLAYGROUND: string;
   readonly OIDC_ISSUER: string;
   readonly OIDC_CLIENT_ID: string;
