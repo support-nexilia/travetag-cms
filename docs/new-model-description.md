@@ -17,8 +17,8 @@ Collezione per gli autori dei contenuti.
   name: String,
   nickname: String?,
   email: String,  // unique index
-  image: Object?,  // MediaImage (path, sizes) - Tag usa SVG
-  background_image: Object?,  // MediaImage (path, sizes)
+  image_media_id: ObjectId?,  // ref → Media (type=image)
+  background_image_media_id: ObjectId?,  // ref → Media (type=image)
   bio: String?,
   is_admin: Boolean,  // default: false
   is_tour_leader: Boolean?,
@@ -64,8 +64,9 @@ Collezione principale per gli articoli. Single collection con discriminazione tr
   title: String,
   subtitle: String?,
   description: String,
-  image: Object?,  // MediaImage (path, sizes)
-  video_full: Object?,  // MediaVideo (path, formats)
+  image_media_id: ObjectId?,  // ref → Media (type=image)
+  image_hero_media_id: ObjectId?,  // ref → Media (type=image)
+  video_full_media_id: ObjectId?,  // ref → Media (type=video)
   slug: String,  // unique index
   type: String,  // "REMEMBER" | "BOOK_NOW"
   tag_ids: [ObjectId],  // array di ref → Tag
@@ -123,7 +124,7 @@ Collezione principale per gli articoli. Single collection con discriminazione tr
   travelers_newborns_max: Number?,
   
   // BOOKING only - Immagine itinerario
-  itinerary_image: Object?,  // MediaImage (path, sizes)
+  itinerary_image_media_id: ObjectId?,  // ref → Media (type=image)
   
   // BOOKING only - Prodotti opzionali (array embedded)
   optional_products: [
@@ -275,7 +276,7 @@ Collezione per i tag degli articoli.
   name: String,
   slug: String,  // unique index, auto-generato da name
   description: String?,
-  image: Object?,  // MediaImage (path, sizes)
+  image_media_id: ObjectId?,  // ref → Media (type=image)
   created_at: Date,
   updated_at: Date
 }
@@ -291,8 +292,7 @@ Collezione per i tag degli articoli.
 - No junction table necessaria - MongoDB gestisce array di ObjectId nativamente
 
 **Note:**
-- Tag include campo `image` per icona/immagine rappresentativa
-- `image` è un oggetto MediaImage (path + sizes) e accetta SVG
+- Tag include campo `image_media_id` per icona/immagine rappresentativa (Media SVG)
 
 ---
 
@@ -337,6 +337,33 @@ Oggetto per gestire immagini e salvare le reference ai formati.
 
 ---
 
+## Media Library (collection `media`)
+Ogni file caricato viene salvato nella libreria media e poi referenziato dalle entità tramite `*_media_id`.
+
+**Struttura documento:**
+```javascript
+{
+  _id: ObjectId,
+  type: String,             // "image" | "video"
+  file: Object,             // MediaImage | MediaVideo
+  original_filename: String?,
+  mime_type: String?,
+  size: Number?,            // bytes
+  title: String?,
+  alt: String?,
+  author_id: ObjectId?,     // ref → Author
+  namespace: String?,       // namespace dell'autore
+  created_at: Date,
+  updated_at: Date
+}
+```
+
+**Permessi:**
+- Admin vede tutti i media
+- Altri utenti vedono solo i media con lo stesso `namespace`
+
+---
+
 ## Step 3: Adv (Advertising)
 
 ### Adv Collection
@@ -350,7 +377,7 @@ Collezione per gestire gli annunci pubblicitari e contenuti promozionali.
   title: String,
   subtitle: String?,
   description: String?,
-  image: Object?,  // MediaImage (path, sizes)
+  image_media_id: ObjectId?,  // ref → Media (type=image)
   link: String?,  // URL destinazione click
   type: String?,  // "banner" | "popup" | "sidebar" | "newsletter"
   position: String?,  // "home" | "article" | "category" | "tag"
@@ -412,14 +439,14 @@ Singolo documento per configurazioni globali dell'applicazione.
   site_name: String,  // "TravelTag"
   site_description: String?,
   site_url: String,  // "https://traveltag.it"
-  site_logo: Object?,  // MediaImage (path, sizes)
+  site_logo_media_id: ObjectId?,  // ref → Media (type=image)
   site_favicon: String?,
   
   // SEO
   meta_title: String?,
   meta_description: String?,
   meta_keywords: [String]?,
-  og_image: Object?,  // MediaImage (path, sizes)
+  og_image_media_id: ObjectId?,  // ref → Media (type=image)
   
   // Social
   social_facebook: String?,
@@ -505,7 +532,7 @@ Collezione per gestire le notifiche push dell'app.
   // Contenuto notifica
   title: String,              // Titolo notifica
   body: String,               // Corpo/messaggio notifica
-  image: Object?,             // MediaImage (path, sizes)
+  image_media_id: ObjectId?,       // ref → Media (type=image)
   
   // Target
   target_type: String,        // "all" | "user" | "segment"
@@ -644,5 +671,5 @@ Collezione per gestire le notifiche push dell'app.
 - ✅ Mantenuto `itinerary_items[]` per tappe viaggio
 
 **Note implementazione:**
-- I campi media (`image`, `video_full`, `itinerary_image`, `og_image`, `site_logo`) salvano sempre oggetti MediaImage/MediaVideo con path e URL dei formati
+- I campi media salvano sempre `*_media_id` che referenzia la libreria media
 - In **versioni successive** si potranno aggiungere nuovi formati in `sizes`/`formats` senza cambiare il modello

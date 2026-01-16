@@ -4,8 +4,8 @@ erDiagram
         string name
         string nickname
         string email UK
-        string image "MediaImage object (SVG icon)"
-        string background_image "MediaImage object"
+        string image_media_id "FK Media (image)"
+        string background_image_media_id "FK Media (image)"
         string bio
         boolean is_admin
         boolean is_tour_leader
@@ -21,8 +21,9 @@ erDiagram
         string title
         string subtitle
         string description
-        string image "MediaImage object"
-        string video_full "MediaVideo object"
+        string image_media_id "FK Media (image)"
+        string image_hero_media_id "FK Media (image)"
+        string video_full_media_id "FK Media (video)"
         string slug UK
         string type "REMEMBER or BOOK_NOW"
         string tag_ids "Array of ObjectIds"
@@ -58,7 +59,7 @@ erDiagram
         string type_of_trip_title "BOOKING only"
         string type_of_trip_body_HTML "BOOKING only"
         string type_of_trip_items "Map object BOOKING only"
-        string itinerary_image "MediaImage BOOKING only"
+        string itinerary_image_media_id "FK Media (image) BOOKING only"
         int max_booking_num "BOOKING only"
         float price_adults "BOOKING only"
         float price_children "BOOKING only"
@@ -103,16 +104,19 @@ erDiagram
         string url
     }
 
-    MediaVideo {
-        string path "Relative path"
-        string formats_m3u "HLS URL"
-        string formats_mp4 "MP4 URL"
-    }
-
-    MediaImage {
-        string path "Relative path"
-        string sizes_s "Small URL"
-        string sizes_xl "Extra large URL"
+    Media {
+        string _id PK
+        string type "image or video"
+        string file "MediaImage or MediaVideo"
+        string original_filename
+        string mime_type
+        int size
+        string title
+        string alt
+        string author_id "FK Author"
+        string namespace
+        datetime created_at
+        datetime updated_at
     }
 
     Category {
@@ -129,7 +133,7 @@ erDiagram
         string name
         string slug UK
         string description
-        string image "MediaImage object"
+        string image_media_id "FK Media (image)"
         datetime created_at
         datetime updated_at
     }
@@ -138,10 +142,14 @@ erDiagram
     Author ||--o{ Article : "tour_leader_id"
     Article }o--o{ Category : "category_id"
     Article }o--o{ Tag : "tag_ids array"
-    Article ||--|| MediaVideo : "embeds video_full"
-    Article ||--|| MediaImage : "embeds image"
-    Article ||--|| MediaImage : "embeds itinerary_image"
+    Media ||--|| MediaVideo : "contains file (video)"
+    Media ||--|| MediaImage : "contains file (image)"
+    Article }o--|| Media : "image_media_id"
+    Article }o--|| Media : "video_full_media_id"
+    Article }o--|| Media : "itinerary_image_media_id"
     Article ||--|{ Product : "embeds optional_products array"
     Article ||--|{ ItineraryItem : "embeds itinerary_items array"
     Author ||--|{ Social : "embeds social array"
-    Tag ||--|| MediaImage : "embeds image (SVG)"
+    Tag }o--|| Media : "image_media_id (SVG)"
+    Author }o--|| Media : "image_media_id"
+    Author }o--|| Media : "background_image_media_id"

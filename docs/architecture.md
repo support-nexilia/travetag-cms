@@ -72,8 +72,8 @@ Reusable utilities and logic.
 - `name` (string) - Full name
 - `nickname` (string, optional) - Nickname
 - `email` (string, unique) - Email address
-- `image` (SizedImage/String) - Profile image
-- `background_image` (SizedImage/String) - Background image
+- `image_media_id` (ObjectId, optional) - Reference to Media (image)
+- `background_image_media_id` (ObjectId, optional) - Reference to Media (image)
 - `bio` (string, optional) - Biography
 - `is_admin` (boolean) - Admin flag
 - `is_tour_leader` (boolean, optional) - Tour leader flag
@@ -89,8 +89,9 @@ Reusable utilities and logic.
 - `title` (string) - Article title
 - `subtitle` (string, optional) - Subtitle
 - `description` (string) - Description
-- `image` (SizedImage/String) - Main image
-- `video_full` (VideoFull/String) - Video object or URL
+- `image_media_id` (ObjectId, optional) - Reference to Media (image)
+- `image_hero_media_id` (ObjectId, optional) - Reference to Media (image)
+- `video_full_media_id` (ObjectId, optional) - Reference to Media (video)
 - `slug` (string, unique) - URL-friendly slug
 - `type` (string) - "REMEMBER" or "BOOK_NOW"
 - `tag_ids` (array[ObjectId]) - Tag references
@@ -108,6 +109,7 @@ Reusable utilities and logic.
 - `name` (string) - Tag name
 - `slug` (string, unique) - Unique slug auto-generated from name
 - `description` (string, optional) - Tag description
+- `image_media_id` (ObjectId, optional) - Reference to Media (image/SVG)
 - `created_at` (datetime) - Creation date
 - `updated_at` (datetime) - Last update date
 - Index: `slug` (unique)
@@ -127,7 +129,7 @@ Reusable utilities and logic.
 - `title` (string) - Advertising title
 - `subtitle` (string, optional) - Subtitle
 - `description` (string, optional) - Description
-- `image` (SizedImage/String) - Advertisement image
+- `image_media_id` (ObjectId, optional) - Reference to Media (image)
 - `link` (string, optional) - Destination URL
 - `type` (string, optional) - Type: `banner`, `popup`, `sidebar`, `newsletter`
 - `position` (string, optional) - Position: `home`, `article`, `category`, `tag`, `search`
@@ -153,8 +155,8 @@ Reusable utilities and logic.
 Single document for global application configuration.
 
 - `_id` (ObjectId) - Fixed ID: "app_settings"
-- **Site Info**: `site_name`, `site_description`, `site_url`, `site_logo` (SizedImage/String), `site_favicon`
-- **SEO**: `meta_title`, `meta_description`, `meta_keywords` (array), `og_image` (SizedImage/String)
+- **Site Info**: `site_name`, `site_description`, `site_url`, `site_logo_media_id` (Media image), `site_favicon`
+- **SEO**: `meta_title`, `meta_description`, `meta_keywords` (array), `og_image_media_id` (Media image)
 - **Social**: `social_facebook`, `social_instagram`, `social_twitter`, `social_youtube`, `social_linkedin`, `social_tiktok`
 - **Contact**: `contact_email`, `contact_phone`, `contact_address`
 - **Analytics**: `google_analytics_id`, `google_tag_manager_id`, `facebook_pixel_id`
@@ -179,7 +181,7 @@ Push notifications management for mobile app.
 - `_id` (ObjectId) - Unique identifier
 - `title` (string) - Notification title
 - `body` (string) - Notification message
-- `image` (string, optional) - Image URL
+- `image_media_id` (ObjectId, optional) - Reference to Media (image)
 - `target_type` (string) - "all" | "user" | "segment"
 - `target_user_ids` (array[string], optional) - Specific user IDs
 - `target_segment` (string, optional) - User segment (tour_leaders, admins, active_users)

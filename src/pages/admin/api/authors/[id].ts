@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getAuthorById, updateAuthor, deleteAuthor } from '@/data/author';
 import { UpdateAuthorSchema } from '@/entities/author';
+import { ObjectId } from 'mongodb';
 
 export const GET: APIRoute = async ({ params }) => {
   try {
@@ -55,11 +56,23 @@ export const PUT: APIRoute = async ({ params, request }) => {
     }
 
     const data = await request.json();
+    const unsetFields: string[] = [];
+    
+    ['image_media_id', 'background_image_media_id'].forEach((field) => {
+      if (data[field] === null) {
+        unsetFields.push(field);
+        delete data[field];
+        return;
+      }
+      if (data[field] && typeof data[field] === 'string') {
+        data[field] = new ObjectId(data[field]);
+      }
+    });
     
     // Validate data
     const validatedData = UpdateAuthorSchema.parse(data);
     
-    const author = await updateAuthor(id, validatedData);
+    const author = await updateAuthor(id, validatedData, unsetFields);
     
     if (!author) {
       return new Response(JSON.stringify({ error: 'Author not found' }), {

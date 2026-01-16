@@ -114,6 +114,12 @@ export const PUT: APIRoute = async ({ params, request, cookies }) => {
         typeof id === 'string' ? new ObjectId(id) : id
       );
     }
+    const mediaFields = ['image_media_id', 'image_hero_media_id', 'video_full_media_id', 'itinerary_image_media_id'];
+    mediaFields.forEach((field) => {
+      if (data[field] && typeof data[field] === 'string') {
+        data[field] = new ObjectId(data[field]);
+      }
+    });
     
     // Convert dates
     if (data.published_date && typeof data.published_date === 'string') {

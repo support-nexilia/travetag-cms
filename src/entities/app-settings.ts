@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { MediaVideoSchema } from './media';
 
 // TypeAge schema
 export const TypeAgeSchema = z.object({
@@ -27,7 +26,7 @@ export const AppSettingsSchema = z.object({
   main_sections_order: z.array(z.string()).optional(), // ["main", "adv", "chat"]
 
   // Video principale
-  video_full: MediaVideoSchema.optional(),
+  video_full_media_id: z.string().optional(),
 
   created_at: z.date().optional(),
   updated_at: z.date().optional(),

@@ -37,13 +37,18 @@ export type MediaVideo = {
   };
 };
 
+export type MediaFile = {
+  path: string;
+  url: string;
+};
+
 export type PresignedUpload = {
   key: string;
   uploadUrl: string;
   headers: Record<string, string>;
 };
 
-type MediaType = 'image' | 'video';
+type MediaType = 'image' | 'video' | 'file';
 
 const IMAGE_SIZE_PRESETS = {
   s: 640,
@@ -139,6 +144,11 @@ const buildImageSizes = (path: string, contentType?: string) => {
     s: buildOptimizerUrl(cleanPath, IMAGE_SIZE_PRESETS.s),
     xl: buildOptimizerUrl(cleanPath, IMAGE_SIZE_PRESETS.xl),
   };
+};
+
+const buildFileUrl = (path: string) => {
+  const cleanPath = stripBucketPrefix(path);
+  return joinUrl(baseMediaUrl, cleanPath);
 };
 
 export async function createPresignedUpload({
@@ -324,7 +334,11 @@ const buildBunnyStreamUrls = (videoId: string) => {
   if (!bunnyStreamCdnUrl) {
     return {};
   }
-  const base = bunnyStreamCdnUrl.replace(/\/+$/, '');
+  let base = bunnyStreamCdnUrl.trim();
+  if (!/^https?:\/\//i.test(base)) {
+    base = `https://${base}`;
+  }
+  base = base.replace(/\/+$/, '');
   return {
     m3u: `${base}/${videoId}/playlist.m3u8`,
     mp4: `${base}/${videoId}/play.mp4`,
@@ -394,6 +408,35 @@ export async function finalizeVideo({
   };
 }
 
+export async function finalizeFile({
+  tmpKey,
+  entity,
+  entityId,
+  field,
+  filename,
+  contentType,
+}: {
+  tmpKey: string;
+  entity: string;
+  entityId: string;
+  field: string;
+  filename?: string;
+  contentType?: string;
+}): Promise<MediaFile> {
+  const ext = getExtension(filename, contentType);
+  const finalKey = normalizePath(
+    `files/${entity}/${entityId}/${field}/${crypto.randomUUID()}${ext}`,
+  );
+
+  const cleanedFinalKey = normalizePath(stripBucketPrefix(finalKey));
+  await moveObject(stripBucketPrefix(tmpKey), cleanedFinalKey);
+
+  return {
+    path: cleanedFinalKey,
+    url: buildFileUrl(cleanedFinalKey),
+  };
+}
+
 export async function finalizeMedia({
   mediaType,
   tmpKey,
@@ -413,6 +456,9 @@ export async function finalizeMedia({
 }) {
   if (mediaType === 'video') {
     return finalizeVideo({ tmpKey, entity, entityId, field, filename, contentType });
+  }
+  if (mediaType === 'file') {
+    return finalizeFile({ tmpKey, entity, entityId, field, filename, contentType });
   }
   return finalizeImage({ tmpKey, entity, entityId, field, filename, contentType });
 }

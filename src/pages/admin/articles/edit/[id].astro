@@ -20,6 +20,10 @@ const articleData = {
   _id: article._id.toString(),
   author_id: article.author_id.toString(),
   tour_leader_id: article.tour_leader_id?.toString(),
+  image_media_id: article.image_media_id?.toString(),
+  image_hero_media_id: article.image_hero_media_id?.toString(),
+  video_full_media_id: article.video_full_media_id?.toString(),
+  itinerary_image_media_id: article.itinerary_image_media_id?.toString(),
   status: article.status,
 };
 
@@ -66,31 +70,17 @@ const tourLeadersData = tourLeaders.map(tl => ({
       e.preventDefault();
       e.stopPropagation();
       
-      console.log('Form submit intercepted');
-      
       if (isLoading) return;
       isLoading = true;
       updateFeedback({ isLoading: true, success: null, error: null });
       
       const formData = new FormData(form);
       const data = {};
-      
-      const fileFields = new Set([
-        'image_file',
-        'image_hero_file',
-        'video_full_file',
-        'itinerary_image_file',
-      ]);
-      const mediaUploads = [];
 
       // Process form data
       formData.forEach((value, key) => {
-        if (fileFields.has(key)) {
-          if (value instanceof File && value.size > 0) {
-            mediaUploads.push({ key, file: value });
-          }
-          return;
-        }
+        if (key.endsWith('_remove')) return;
+        if (key.endsWith('_media_id') && typeof value === 'string' && !value) return;
         // Handle nested array fields like itinerary_items[0][title]
         const nestedMatch = key.match(/^(.+)\[(\d+)\]\[(.+)\]$/);
         if (nestedMatch) {
@@ -115,66 +105,22 @@ const tourLeadersData = tourLeaders.map(tl => ({
         }
       });
       
-      console.log('Sending data:', data);
-      
-      const uploadMedia = async (entityId, upload) => {
-        const mediaType = upload.key === 'video_full_file' ? 'video' : 'image';
-        const fieldMap = {
-          image_file: 'image',
-          image_hero_file: 'image_hero',
-          video_full_file: 'video_full',
-          itinerary_image_file: 'itinerary_image',
-        };
-        const field = fieldMap[upload.key];
+      const mediaFields = [
+        'image_media_id',
+        'image_hero_media_id',
+        'video_full_media_id',
+        'itinerary_image_media_id',
+      ];
 
-        if (!field) return null;
-
-        const presignResponse = await fetch('/admin/api/media/presign', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            filename: upload.file.name,
-            contentType: upload.file.type,
-          }),
-        });
-
-        if (!presignResponse.ok) {
-          throw new Error('Impossibile generare la presigned URL');
+      mediaFields.forEach((field) => {
+        const remove = formData.get(`${field}_remove`) === 'true';
+        const value = formData.get(field);
+        if (remove) {
+          data[field] = null;
+        } else if (value) {
+          data[field] = value;
         }
-
-        const presign = await presignResponse.json();
-
-        const uploadResponse = await fetch(presign.uploadUrl, {
-          method: 'PUT',
-          headers: presign.headers,
-          body: upload.file,
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error('Upload media fallito');
-        }
-
-        const finalizeResponse = await fetch('/admin/api/media/finalize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            mediaType,
-            tmpKey: presign.key,
-            entity: 'article',
-            entityId,
-            field,
-            filename: upload.file.name,
-            contentType: upload.file.type,
-          }),
-        });
-
-        if (!finalizeResponse.ok) {
-          throw new Error('Finalize media fallito');
-        }
-
-        const finalize = await finalizeResponse.json();
-        return { field, media: finalize.media };
-      };
+      });
 
       try {
         const response = await fetch(`/admin/api/articles/${articleId}`, {
@@ -184,22 +130,6 @@ const tourLeadersData = tourLeaders.map(tl => ({
         });
         
         if (response.ok) {
-          if (mediaUploads.length > 0) {
-            const mediaUpdates = {};
-            for (const upload of mediaUploads) {
-              const result = await uploadMedia(articleId, upload);
-              if (result) {
-                mediaUpdates[result.field] = result.media;
-              }
-            }
-            if (Object.keys(mediaUpdates).length > 0) {
-              await fetch(`/admin/api/articles/${articleId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(mediaUpdates),
-              });
-            }
-          }
           isLoading = false;
           updateFeedback({ 
             isLoading: false, 

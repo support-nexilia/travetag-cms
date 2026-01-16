@@ -4,7 +4,7 @@ import { getAdvById } from '@/data/adv';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
 import { toISODateTimeLocal } from '@/utils';
 import { FormFeedback } from '@/components/FormFeedback';
-import MediaUploadField from '@/components/form/MediaUploadField.astro';
+import { MediaPickerField } from '@/components/form/MediaPickerField';
 
 
 
@@ -16,7 +16,7 @@ if (!adv) return Astro.redirect('/admin/advs');
 
 const user = await getCurrentUser();
 const userIsAdmin = await isAdmin();
-const imageUrl = adv.image?.sizes?.s || adv.image?.sizes?.xl || '';
+const imageMediaId = adv.image_media_id || '';
 ---
 
 <MainLayout title={`Modifica ${adv.title}`}>
@@ -71,7 +71,13 @@ const imageUrl = adv.image?.sizes?.s || adv.image?.sizes?.xl || '';
         </div>
 
         <div class="mb-4">
-          <MediaUploadField id="image_file" label="Immagine" accept="image/*" previewUrl={imageUrl} />
+          <MediaPickerField
+            client:load
+            name="image_media_id"
+            label="Immagine"
+            mediaType="image"
+            initialMediaId={imageMediaId}
+          />
         </div>
 
         <div class="grid grid-cols-2 gap-4 mb-4">
@@ -161,15 +167,6 @@ const imageUrl = adv.image?.sizes?.s || adv.image?.sizes?.xl || '';
       updateFeedback({ isLoading: true, success: null, error: null });
       
       const formData = new FormData(form);
-      const fileFields = new Set(['image_file']);
-      const mediaUploads = [];
-      formData.forEach((value, key) => {
-        if (fileFields.has(key)) {
-          if (value instanceof File && value.size > 0) {
-            mediaUploads.push({ key, file: value });
-          }
-        }
-      });
 
       const data: any = {
         title: formData.get('title') as string,
@@ -184,54 +181,13 @@ const imageUrl = adv.image?.sizes?.s || adv.image?.sizes?.xl || '';
       if (isAdmin && formData.get('userId')) {
         data.userId = formData.get('userId') as string;
       }
-      
-      const uploadMedia = async (entityId, upload) => {
-        const presignResponse = await fetch('/admin/api/media/presign', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            filename: upload.file.name,
-            contentType: upload.file.type,
-          }),
-        });
-
-        if (!presignResponse.ok) {
-          throw new Error('Impossibile generare la presigned URL');
-        }
-
-        const presign = await presignResponse.json();
-
-        const uploadResponse = await fetch(presign.uploadUrl, {
-          method: 'PUT',
-          headers: presign.headers,
-          body: upload.file,
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error('Upload media fallito');
-        }
-
-        const finalizeResponse = await fetch('/admin/api/media/finalize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            mediaType: 'image',
-            tmpKey: presign.key,
-            entity: 'adv',
-            entityId,
-            field: 'image',
-            filename: upload.file.name,
-            contentType: upload.file.type,
-          }),
-        });
-
-        if (!finalizeResponse.ok) {
-          throw new Error('Finalize media fallito');
-        }
-
-        const finalize = await finalizeResponse.json();
-        return finalize.media;
-      };
+      const imageMediaIdValue = formData.get('image_media_id');
+      const imageMediaRemove = formData.get('image_media_id_remove') === 'true';
+      if (imageMediaRemove) {
+        data.image_media_id = null;
+      } else if (imageMediaIdValue) {
+        data.image_media_id = imageMediaIdValue;
+      }
 
       try {
         const response = await fetch(`/admin/api/advs/${advId}`, {
@@ -245,16 +201,6 @@ const imageUrl = adv.image?.sizes?.s || adv.image?.sizes?.xl || '';
         isLoading = false;
         
         if (response.ok) {
-          if (mediaUploads.length > 0) {
-            const media = await uploadMedia(advId, mediaUploads[0]);
-            if (media) {
-              await fetch(`/admin/api/advs/${advId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: media }),
-              });
-            }
-          }
           updateFeedback({ 
             isLoading: false, 
             success: { 

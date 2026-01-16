@@ -45,4 +45,5 @@ export const collections = {
   tags: db.collection('tags'),
   categories: db.collection('categories'),
   users: db.collection('users'),
+  media: db.collection('media'),
 } as const;

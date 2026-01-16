@@ -2,7 +2,7 @@
 import MainLayout from '@/layouts/MainLayout.astro';
 import { getAuthorById } from '@/data/author';
 import { FormFeedback } from '@/components/FormFeedback';
-import MediaUploadField from '@/components/form/MediaUploadField.astro';
+import { MediaPickerField } from '@/components/form/MediaPickerField';
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect('/admin/authors');
@@ -10,9 +10,10 @@ if (!id) return Astro.redirect('/admin/authors');
 const author = await getAuthorById(id);
 if (!author) return Astro.redirect('/admin/authors');
 
-const imageUrl = author.image?.sizes?.s || author.image?.sizes?.xl || '';
-const backgroundImageUrl =
-  author.background_image?.sizes?.s || author.background_image?.sizes?.xl || '';
+const imageMediaId = author.image_media_id ? author.image_media_id.toString() : '';
+const backgroundImageMediaId = author.background_image_media_id
+  ? author.background_image_media_id.toString()
+  : '';
 ---
 
 <MainLayout title={`Modifica ${author.name}`}>
@@ -81,18 +82,20 @@ const backgroundImageUrl =
 
         <!-- Immagini -->
         <div class="grid grid-cols-2 gap-4">
-          <MediaUploadField
-            id="image_file"
+          <MediaPickerField
+            client:load
+            name="image_media_id"
             label="Immagine Profilo"
-            accept="image/*"
-            previewUrl={imageUrl}
+            mediaType="image"
+            initialMediaId={imageMediaId}
           />
 
-          <MediaUploadField
-            id="background_image_file"
+          <MediaPickerField
+            client:load
+            name="background_image_media_id"
             label="Immagine Sfondo"
-            accept="image/*"
-            previewUrl={backgroundImageUrl}
+            mediaType="image"
+            initialMediaId={backgroundImageMediaId}
           />
         </div>
 
@@ -256,8 +259,6 @@ const backgroundImageUrl =
       updateFeedback({ isLoading: true, success: null, error: null });
       
       const formData = new FormData(form);
-      const fileFields = new Set(['image_file', 'background_image_file']);
-      const mediaUploads = [];
       
       // Collect languages
       const languages = [];
@@ -273,15 +274,7 @@ const backgroundImageUrl =
         }
       }
       
-      formData.forEach((value, key) => {
-        if (fileFields.has(key)) {
-          if (value instanceof File && value.size > 0) {
-            mediaUploads.push({ key, file: value });
-          }
-        }
-      });
-
-      const data = {
+      const data: any = {
         name: formData.get('name'),
         nickname: formData.get('nickname') || undefined,
         email: formData.get('email'),
@@ -292,61 +285,22 @@ const backgroundImageUrl =
         languages,
         social,
       };
-      
-      const uploadMedia = async (entityId, upload) => {
-        const fieldMap = {
-          image_file: 'image',
-          background_image_file: 'background_image',
-        };
-        const field = fieldMap[upload.key];
-        if (!field) return null;
+      const imageMediaIdValue = formData.get('image_media_id');
+      const imageMediaRemove = formData.get('image_media_id_remove') === 'true';
+      const backgroundMediaIdValue = formData.get('background_image_media_id');
+      const backgroundMediaRemove = formData.get('background_image_media_id_remove') === 'true';
 
-        const presignResponse = await fetch('/admin/api/media/presign', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            filename: upload.file.name,
-            contentType: upload.file.type,
-          }),
-        });
+      if (imageMediaRemove) {
+        data.image_media_id = null;
+      } else if (imageMediaIdValue) {
+        data.image_media_id = imageMediaIdValue;
+      }
 
-        if (!presignResponse.ok) {
-          throw new Error('Impossibile generare la presigned URL');
-        }
-
-        const presign = await presignResponse.json();
-
-        const uploadResponse = await fetch(presign.uploadUrl, {
-          method: 'PUT',
-          headers: presign.headers,
-          body: upload.file,
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error('Upload media fallito');
-        }
-
-        const finalizeResponse = await fetch('/admin/api/media/finalize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            mediaType: 'image',
-            tmpKey: presign.key,
-            entity: 'author',
-            entityId,
-            field,
-            filename: upload.file.name,
-            contentType: upload.file.type,
-          }),
-        });
-
-        if (!finalizeResponse.ok) {
-          throw new Error('Finalize media fallito');
-        }
-
-        const finalize = await finalizeResponse.json();
-        return { field, media: finalize.media };
-      };
+      if (backgroundMediaRemove) {
+        data.background_image_media_id = null;
+      } else if (backgroundMediaIdValue) {
+        data.background_image_media_id = backgroundMediaIdValue;
+      }
 
       try {
         const response = await fetch(`/admin/api/authors/${authorId}`, {
@@ -360,22 +314,6 @@ const backgroundImageUrl =
         isLoading = false;
         
         if (response.ok) {
-          if (mediaUploads.length > 0) {
-            const mediaUpdates = {};
-            for (const upload of mediaUploads) {
-              const result = await uploadMedia(authorId, upload);
-              if (result) {
-                mediaUpdates[result.field] = result.media;
-              }
-            }
-            if (Object.keys(mediaUpdates).length > 0) {
-              await fetch(`/admin/api/authors/${authorId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(mediaUpdates),
-              });
-            }
-          }
           updateFeedback({ 
             isLoading: false, 
             success: { 

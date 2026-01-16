@@ -1,0 +1,13 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import { MediaGallery } from '@/components/media/MediaGallery';
+---
+
+<MainLayout title="Media Library">
+  <div class="p-8">
+    <div class="max-w-6xl mx-auto">
+      <h1 class="text-3xl font-bold text-gray-800 mb-6">Media Library</h1>
+      <MediaGallery client:load />
+    </div>
+  </div>
+</MainLayout>

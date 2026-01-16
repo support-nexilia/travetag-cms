@@ -1,6 +1,40 @@
 import { gql } from 'graphql-tag';
 
 export const typeDefs = gql`
+  type MediaImage {
+    path: String!
+    sizes_s: String
+    sizes_xl: String
+  }
+
+  type MediaVideo {
+    path: String!
+    formats_m3u: String
+    formats_mp4: String
+  }
+
+  type MediaDocument {
+    path: String!
+    url: String
+  }
+
+  union MediaFile = MediaImage | MediaVideo | MediaDocument
+
+  type Media {
+    id: ID!
+    type: String!
+    file: MediaFile!
+    original_filename: String
+    mime_type: String
+    size: Int
+    title: String
+    alt: String
+    author_id: ID
+    namespace: String
+    createdAt: String!
+    updatedAt: String!
+  }
+
   type Category {
     id: ID!
     name: String!
@@ -15,6 +49,8 @@ export const typeDefs = gql`
     name: String!
     slug: String!
     description: String
+    image_media_id: ID
+    image: Media
     createdAt: String!
     updatedAt: String!
   }
@@ -23,7 +59,10 @@ export const typeDefs = gql`
     id: ID!
     name: String!
     bio: String
-    image: String
+    image_media_id: ID
+    image: Media
+    background_image_media_id: ID
+    background_image: Media
     role: String!
     createdAt: String!
     updatedAt: String!
@@ -36,7 +75,12 @@ export const typeDefs = gql`
     slug: String!
     excerpt: String
     description: String
-    image: String
+    image_media_id: ID
+    image: Media
+    video_full_media_id: ID
+    video_full: Media
+    itinerary_image_media_id: ID
+    itinerary_image: Media
     type: String!
     status: String!
     published_date: String!
@@ -54,7 +98,8 @@ export const typeDefs = gql`
     title: String!
     subtitle: String
     link: String
-    image: String
+    image_media_id: ID
+    image: Media
     date: String!
     status: String!
     createdAt: String!
@@ -87,6 +132,10 @@ export const typeDefs = gql`
     # Advs
     advs: [Adv!]!
     adv(id: ID!): Adv
+
+    # Media
+    media(type: String, limit: Int, skip: Int): [Media!]!
+    mediaById(id: ID!): Media
   }
 
   type Mutation {
@@ -97,21 +146,23 @@ export const typeDefs = gql`
 
     # Tags
     createTag(name: String!, description: String): Tag!
-    updateTag(id: ID!, name: String, description: String): Tag!
+    updateTag(id: ID!, name: String, description: String, image_media_id: ID): Tag!
     deleteTag(id: ID!): Tag!
 
     # Authors
     createAuthor(
       name: String!
       bio: String
-      image: String
+      image_media_id: ID
+      background_image_media_id: ID
       role: String!
     ): Author!
     updateAuthor(
       id: ID!
       name: String
       bio: String
-      image: String
+      image_media_id: ID
+      background_image_media_id: ID
       role: String
     ): Author!
     deleteAuthor(id: ID!): Author!
@@ -123,7 +174,9 @@ export const typeDefs = gql`
       slug: String!
       excerpt: String
       description: String
-      image: String
+      image_media_id: ID
+      video_full_media_id: ID
+      itinerary_image_media_id: ID
       type: String!
       status: String!
       published_date: String!
@@ -139,7 +192,9 @@ export const typeDefs = gql`
       slug: String
       excerpt: String
       description: String
-      image: String
+      image_media_id: ID
+      video_full_media_id: ID
+      itinerary_image_media_id: ID
       status: String
       published_date: String
       tag_ids: [ID!]
@@ -152,7 +207,7 @@ export const typeDefs = gql`
       title: String!
       subtitle: String
       link: String
-      image: String
+      image_media_id: ID
       date: String!
       status: String!
     ): Adv!
@@ -162,7 +217,7 @@ export const typeDefs = gql`
       title: String
       subtitle: String
       link: String
-      image: String
+      image_media_id: ID
       date: String
       status: String
     ): Adv!

@@ -1,12 +1,22 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
 import { getAllAuthors } from '@/data/author';
+import { getMediaById } from '@/data/media';
 import { Pencil } from 'lucide-react';
 import { DeleteButton } from '@/components/ui/DeleteButton';
 import { Badge } from '@/components/ui/badge';
 
 const authors = await getAllAuthors();
-const getImageUrl = (image) => image?.sizes?.s || image?.sizes?.xl || '';
+const getImageUrl = (media) => media?.file?.sizes?.s || media?.file?.sizes?.xl || '';
+
+const authorsWithMedia = await Promise.all(
+  authors.map(async (author) => {
+    const media = author.image_media_id
+      ? await getMediaById(author.image_media_id.toString())
+      : null;
+    return { ...author, media };
+  }),
+);
 ---
 
 <MainLayout title="Autori">
@@ -35,13 +45,13 @@ const getImageUrl = (image) => image?.sizes?.s || image?.sizes?.xl || '';
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
-          {authors.map((author) => (
+          {authorsWithMedia.map((author) => (
             <tr class="hover:bg-gray-50/50 transition-colors">
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center gap-3">
-                  {getImageUrl(author.image) ? (
+                  {getImageUrl(author.media) ? (
                     <img 
-                      src={getImageUrl(author.image)} 
+                      src={getImageUrl(author.media)} 
                       alt={author.name} 
                       class="w-10 h-10 rounded-full object-cover"
                     />

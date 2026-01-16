@@ -45,22 +45,10 @@ const tourLeaders = await getTourLeaders();
       const formData = new FormData(form);
       const data: any = {};
       
-      const fileFields = new Set([
-        'image_file',
-        'image_hero_file',
-        'video_full_file',
-        'itinerary_image_file',
-      ]);
-      const mediaUploads = [];
-
       // Process form data
       formData.forEach((value, key) => {
-        if (fileFields.has(key)) {
-          if (value instanceof File && value.size > 0) {
-            mediaUploads.push({ key, file: value });
-          }
-          return;
-        }
+        if (key.endsWith('_remove')) return;
+        if (key.endsWith('_media_id') && typeof value === 'string' && !value) return;
         // Handle nested array fields like itinerary_items[0][title]
         const nestedMatch = key.match(/^(.+)\[(\d+)\]\[(.+)\]$/);
         if (nestedMatch) {
@@ -84,66 +72,24 @@ const tourLeaders = await getTourLeaders();
           data[key] = value;
         }
       });
+
+      const mediaFields = [
+        'image_media_id',
+        'image_hero_media_id',
+        'video_full_media_id',
+        'itinerary_image_media_id',
+      ];
+
+      mediaFields.forEach((field) => {
+        const remove = formData.get(`${field}_remove`) === 'true';
+        const value = formData.get(field);
+        if (remove) {
+          data[field] = null;
+        } else if (value) {
+          data[field] = value;
+        }
+      });
       
-      const uploadMedia = async (entityId, upload) => {
-        const mediaType = upload.key === 'video_full_file' ? 'video' : 'image';
-        const fieldMap = {
-          image_file: 'image',
-          image_hero_file: 'image_hero',
-          video_full_file: 'video_full',
-          itinerary_image_file: 'itinerary_image',
-        };
-        const field = fieldMap[upload.key];
-
-        if (!field) return null;
-
-        const presignResponse = await fetch('/admin/api/media/presign', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            filename: upload.file.name,
-            contentType: upload.file.type,
-          }),
-        });
-
-        if (!presignResponse.ok) {
-          throw new Error('Impossibile generare la presigned URL');
-        }
-
-        const presign = await presignResponse.json();
-
-        const uploadResponse = await fetch(presign.uploadUrl, {
-          method: 'PUT',
-          headers: presign.headers,
-          body: upload.file,
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error('Upload media fallito');
-        }
-
-        const finalizeResponse = await fetch('/admin/api/media/finalize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            mediaType,
-            tmpKey: presign.key,
-            entity: 'article',
-            entityId,
-            field,
-            filename: upload.file.name,
-            contentType: upload.file.type,
-          }),
-        });
-
-        if (!finalizeResponse.ok) {
-          throw new Error('Finalize media fallito');
-        }
-
-        const finalize = await finalizeResponse.json();
-        return { field, media: finalize.media };
-      };
-
       try {
         const response = await fetch('/admin/api/articles', {
           method: 'POST',
@@ -154,22 +100,6 @@ const tourLeaders = await getTourLeaders();
         if (response.ok) {
           const result = await response.json();
           const entityId = result._id || result.id;
-          if (entityId && mediaUploads.length > 0) {
-            const mediaUpdates = {};
-            for (const upload of mediaUploads) {
-              const result = await uploadMedia(entityId, upload);
-              if (result) {
-                mediaUpdates[result.field] = result.media;
-              }
-            }
-            if (Object.keys(mediaUpdates).length > 0) {
-              await fetch(`/admin/api/articles/${entityId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(mediaUpdates),
-              });
-            }
-          }
           updateFeedback({ 
             isLoading: false, 
             success: { show: true, message: 'Articolo creato con successo!' }, 

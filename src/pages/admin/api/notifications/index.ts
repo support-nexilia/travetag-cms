@@ -39,6 +39,9 @@ export const POST: APIRoute = async ({ request }) => {
     if (data.author_id) {
       data.author_id = new ObjectId(data.author_id);
     }
+    if (data.image_media_id && typeof data.image_media_id === 'string') {
+      data.image_media_id = new ObjectId(data.image_media_id);
+    }
     
     // Convert dates
     if (data.scheduled_at) {

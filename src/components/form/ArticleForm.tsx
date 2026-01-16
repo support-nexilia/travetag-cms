@@ -6,28 +6,12 @@ import { TagSelector } from './TagSelector';
 import { CategorySelector } from './CategorySelector';
 import TypesRepeater from './TypesRepeater';
 import RichTextEditor from './RichTextEditor';
-import { MediaUploadField } from './MediaUploadField';
+import { MediaPickerField } from './MediaPickerField';
 
 interface Author {
   _id: string;
   name: string;
 }
-
-type MediaImage = {
-  path: string;
-  sizes?: {
-    s?: string;
-    xl?: string;
-  };
-};
-
-type MediaVideo = {
-  path: string;
-  formats?: {
-    m3u?: string;
-    mp4?: string;
-  };
-};
 
 interface Article {
   _id?: string;
@@ -40,10 +24,9 @@ interface Article {
   tour_leader_id?: string;
   status: 'DRAFT' | 'PUBLISHED';
   published_date: Date;
-  image?: MediaImage;
-  image_hero?: MediaImage;
-  video_full?: MediaVideo;
-  itinerary_image?: MediaImage;
+  image_media_id?: string;
+  video_full_media_id?: string;
+  itinerary_image_media_id?: string;
   [key: string]: any;
 }
 
@@ -67,10 +50,6 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
 
   const isBookNow = articleType === 'BOOK_NOW';
   const isRemember = articleType === 'REMEMBER';
-  const imagePreview = article?.image?.sizes?.s || article?.image?.sizes?.xl;
-  const imageHeroPreview = article?.image_hero?.sizes?.s || article?.image_hero?.sizes?.xl;
-  const itineraryPreview = article?.itinerary_image?.sizes?.s || article?.itinerary_image?.sizes?.xl;
-  const videoPreview = article?.video_full?.formats?.mp4 || article?.video_full?.formats?.m3u;
 
   // Auto-generate slug from title
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -229,26 +208,25 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <MediaUploadField
-          id="image_file"
+        <MediaPickerField
+          name="image_media_id"
           label="Immagine Principale"
-          accept="image/*"
-          previewUrl={imagePreview}
+          mediaType="image"
+          initialMediaId={article?.image_media_id}
         />
 
-        <MediaUploadField
-          id="image_hero_file"
+        <MediaPickerField
+          name="image_hero_media_id"
           label="Immagine Hero"
-          accept="image/*"
-          previewUrl={imageHeroPreview}
+          mediaType="image"
+          initialMediaId={article?.image_hero_media_id}
         />
 
-        <MediaUploadField
-          id="video_full_file"
+        <MediaPickerField
+          name="video_full_media_id"
           label="Video"
-          accept="video/*"
-          previewUrl={videoPreview}
-          previewType="video"
+          mediaType="video"
+          initialMediaId={article?.video_full_media_id}
         />
       </div>
 
@@ -451,39 +429,11 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <MediaUploadField
-              id="itinerary_image_file"
+            <MediaPickerField
+              name="itinerary_image_media_id"
               label="Immagine Itinerario"
-              accept="image/*"
-              previewUrl={itineraryPreview}
-            />
-
-            <div>
-              <label htmlFor="stripe_product_id" className="block text-sm font-medium text-gray-700 mb-2">
-                Stripe Product ID
-              </label>
-              <input
-                type="text"
-                id="stripe_product_id"
-                name="stripe_product_id"
-                defaultValue={article?.stripe_product_id}
-                placeholder="prod_..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="stripe_price_id" className="block text-sm font-medium text-gray-700 mb-2">
-              Stripe Price ID
-            </label>
-            <input
-              type="text"
-              id="stripe_price_id"
-              name="stripe_price_id"
-              defaultValue={article?.stripe_price_id}
-              placeholder="price_..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+              mediaType="image"
+              initialMediaId={article?.itinerary_image_media_id}
             />
           </div>
 

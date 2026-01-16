@@ -37,12 +37,12 @@ export function Modal({
 }: ModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={sizeClasses[size]}>
+      <DialogContent className={`${sizeClasses[size]} max-h-[90vh] overflow-hidden`}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        <div className="py-4">{children}</div>
+        <div className="py-4 max-h-[70vh] overflow-y-auto">{children}</div>
         {footer && <DialogFooter>{footer}</DialogFooter>}
       </DialogContent>
     </Dialog>

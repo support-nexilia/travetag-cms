@@ -3,6 +3,7 @@ import * as TagData from '@/data/tag';
 import * as AuthorData from '@/data/author';
 import * as ArticleData from '@/data/article';
 import * as AdvData from '@/data/adv';
+import * as MediaData from '@/data/media';
 
 export const queries = {
   // Categories
@@ -36,4 +37,23 @@ export const queries = {
   // Advs
   advs: async () => await AdvData.getAllAdvs(),
   adv: async (_: any, { id }: { id: string }) => await AdvData.getAdvById(id),
+
+  // Media
+  media: async (_: any, { type, limit, skip }: { type?: string; limit?: number; skip?: number }, context: any) => {
+    const namespace = context?.isAdmin ? undefined : context?.namespace;
+    return await MediaData.getMediaList({
+      namespace,
+      type: type === 'image' || type === 'video' ? type : undefined,
+      limit,
+      skip,
+    });
+  },
+  mediaById: async (_: any, { id }: { id: string }, context: any) => {
+    const media = await MediaData.getMediaById(id);
+    if (!media) return null;
+    if (!context?.isAdmin && context?.namespace && media.namespace && media.namespace !== context.namespace) {
+      return null;
+    }
+    return media;
+  },
 };

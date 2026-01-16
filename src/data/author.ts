@@ -96,19 +96,32 @@ export async function createAuthor(data: CreateAuthor) {
   return await getAuthorById(result.insertedId.toString());
 }
 
-export async function updateAuthor(id: string, data: UpdateAuthor) {
+export async function updateAuthor(
+  id: string,
+  data: UpdateAuthor,
+  unsetFields: string[] = []
+) {
   if (!ObjectId.isValid(id)) {
     return null;
   }
   
+  const updateOps: Record<string, any> = {
+    $set: {
+      ...data,
+      updated_at: new Date(),
+    },
+  };
+
+  if (unsetFields.length > 0) {
+    updateOps.$unset = unsetFields.reduce<Record<string, ''>>((acc, field) => {
+      acc[field] = '';
+      return acc;
+    }, {});
+  }
+
   const result = await collections.authors.findOneAndUpdate(
     { _id: new ObjectId(id) },
-    { 
-      $set: {
-        ...data,
-        updated_at: new Date(),
-      }
-    },
+    updateOps,
     { returnDocument: 'after' }
   );
   

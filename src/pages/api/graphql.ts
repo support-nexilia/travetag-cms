@@ -63,6 +63,9 @@ type VerifiedJwtPayload = jwt.JwtPayload & {
   name?: string;
   preferred_username?: string;
   scope?: string;
+  namespace?: string;
+  role?: string;
+  roles?: string[];
 };
 
 async function verifyRequestAuth(
@@ -270,10 +273,19 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
+    const isAdmin =
+      authResult.payload.role === 'admin' ||
+      authResult.payload.roles?.includes('admin') ||
+      authResult.payload.scope?.includes('admin');
+
     const response = await server.executeOperation({
       query: body.query,
       variables: body.variables,
       operationName: body.operationName,
+      contextValue: {
+        namespace: authResult.payload.namespace,
+        isAdmin,
+      },
     });
 
     const result =

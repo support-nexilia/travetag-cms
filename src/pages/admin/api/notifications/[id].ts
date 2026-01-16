@@ -63,6 +63,9 @@ export const PUT: APIRoute = async ({ params, request }) => {
     if (data.scheduled_at) {
       data.scheduled_at = new Date(data.scheduled_at);
     }
+    if (data.image_media_id && typeof data.image_media_id === 'string') {
+      data.image_media_id = new ObjectId(data.image_media_id);
+    }
     
     // Update notification
     const notification = await updateNotification(id, data);

@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createTag, getAllTags } from '@/data/tag';
+import { ObjectId } from 'mongodb';
 
 export const GET: APIRoute = async () => {
   try {
@@ -23,6 +24,9 @@ export const GET: APIRoute = async () => {
 export const POST: APIRoute = async ({ request }) => {
   try {
     const data = await request.json();
+    if (data.image_media_id && typeof data.image_media_id === 'string') {
+      data.image_media_id = new ObjectId(data.image_media_id);
+    }
     const tag = await createTag(data);
     return new Response(JSON.stringify(tag), {
       status: 201,

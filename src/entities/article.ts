@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { ObjectId } from 'mongodb';
-import { MediaImageSchema, MediaVideoSchema } from './media';
 
 // Article type enum
 export const ArticleTypeSchema = z.enum(['REMEMBER', 'BOOK_NOW']);
@@ -39,8 +38,9 @@ const BaseArticleSchema = z.object({
   title: z.string().min(1),
   subtitle: z.string().optional(),
   description: z.string(),
-  image: MediaImageSchema.optional(),
-  video_full: MediaVideoSchema.optional(),
+  image_media_id: z.instanceof(ObjectId).optional(),
+  image_hero_media_id: z.instanceof(ObjectId).optional(),
+  video_full_media_id: z.instanceof(ObjectId).optional(),
   slug: z.string(),
   type: ArticleTypeSchema,
   tag_ids: z.array(z.instanceof(ObjectId)).default([]),
@@ -97,7 +97,7 @@ const BookingFieldsSchema = z.object({
   travelers_newborns_max: z.number().optional(),
   
   // Itinerary image
-  itinerary_image: MediaImageSchema.optional(),
+  itinerary_image_media_id: z.instanceof(ObjectId).optional(),
   
   // Optional products
   optional_products: z.array(ProductSchema).optional(),

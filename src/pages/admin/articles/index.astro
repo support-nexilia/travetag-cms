@@ -2,6 +2,7 @@
 import MainLayout from '@/layouts/MainLayout.astro';
 import { getAllArticles } from '@/data/article';
 import { getAuthorById } from '@/data/author';
+import { getMediaById } from '@/data/media';
 import { Pencil } from 'lucide-react';
 import { DeleteButton } from '@/components/ui/DeleteButton';
 import { Badge } from '@/components/ui/badge';
@@ -15,12 +16,15 @@ const namespace = isAdmin(session) ? undefined : session.namespace;
 const articles = await getAllArticles(namespace);
 
 // Get authors for each article
-const getImageUrl = (image) => image?.sizes?.s || image?.sizes?.xl || '';
+const getImageUrl = (media) => media?.file?.sizes?.s || media?.file?.sizes?.xl || '';
 
 const articlesWithAuthors = await Promise.all(
   articles.map(async (article) => {
     const author = await getAuthorById(article.author_id.toString());
-    return { ...article, author };
+    const media = article.image_media_id
+      ? await getMediaById(article.image_media_id.toString())
+      : null;
+    return { ...article, author, media };
   })
 );
 ---
@@ -54,9 +58,9 @@ const articlesWithAuthors = await Promise.all(
             <tr class="hover:bg-gray-50/50 transition-colors">
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
-                  {getImageUrl(article.image) && (
+                  {getImageUrl(article.media) && (
                     <img 
-                      src={getImageUrl(article.image)} 
+                      src={getImageUrl(article.media)} 
                       alt={article.title} 
                       class="w-16 h-16 rounded-lg object-cover"
                     />

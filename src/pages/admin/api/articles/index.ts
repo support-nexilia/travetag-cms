@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { getAllArticles, createArticle } from '@/data/article';
 import { CreateArticleSchema } from '@/entities/article';
 import { getSession, isAdmin } from '@/lib/session';
+import { ObjectId } from 'mongodb';
 
 export const GET: APIRoute = async ({ cookies }) => {
   try {
@@ -35,6 +36,14 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     if (!isAdmin(session) && session.namespace) {
       data.namespace = session.namespace;
     }
+
+    // Convert media ids to ObjectId
+    const mediaFields = ['image_media_id', 'image_hero_media_id', 'video_full_media_id', 'itinerary_image_media_id'];
+    mediaFields.forEach((field) => {
+      if (data[field] && typeof data[field] === 'string') {
+        data[field] = new ObjectId(data[field]);
+      }
+    });
     
     // Validate data
     const validatedData = CreateArticleSchema.parse(data);

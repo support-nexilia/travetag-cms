@@ -2,7 +2,7 @@
 import MainLayout from '@/layouts/MainLayout.astro';
 import { getTagById } from '@/data/tag';
 import { FormFeedback } from '@/components/FormFeedback';
-import MediaUploadField from '@/components/form/MediaUploadField.astro';
+import { MediaPickerField } from '@/components/form/MediaPickerField';
 
 
 
@@ -12,7 +12,7 @@ if (!id) return Astro.redirect('/admin/tags');
 const tag = await getTagById(id);
 if (!tag) return Astro.redirect('/admin/tags');
 
-const imageUrl = tag.image?.sizes?.s || tag.image?.sizes?.xl || '';
+const imageMediaId = tag.image_media_id ? tag.image_media_id.toString() : '';
 ---
 
 <MainLayout title={`Modifica ${tag.name}`}>
@@ -64,11 +64,12 @@ const imageUrl = tag.image?.sizes?.s || tag.image?.sizes?.xl || '';
         </div>
 
         <div class="mb-6">
-          <MediaUploadField
-            id="image_file"
+          <MediaPickerField
+            client:load
+            name="image_media_id"
             label="Icona SVG"
-            accept="image/svg+xml"
-            previewUrl={imageUrl}
+            mediaType="image"
+            initialMediaId={imageMediaId}
           />
         </div>
 
@@ -119,71 +120,21 @@ const imageUrl = tag.image?.sizes?.s || tag.image?.sizes?.xl || '';
       e.preventDefault();
       
       const formData = new FormData(form);
-      const fileFields = new Set(['image_file']);
-      const mediaUploads = [];
-      formData.forEach((value, key) => {
-        if (fileFields.has(key)) {
-          if (value instanceof File && value.size > 0) {
-            mediaUploads.push({ key, file: value });
-          }
-        }
-      });
-
       const slugValue = formData.get('slug') as string;
       const nameValue = formData.get('name') as string;
-      const data = {
+      const imageMediaId = formData.get('image_media_id');
+      const imageMediaRemove = formData.get('image_media_id_remove') === 'true';
+      const data: any = {
         name: nameValue,
         slug: slugValue || nameValue,
-        description: formData.get('description') as string || undefined,
+        description: (formData.get('description') as string) || undefined,
       };
-      
-      const uploadMedia = async (entityId, upload) => {
-        const presignResponse = await fetch('/admin/api/media/presign', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            filename: upload.file.name,
-            contentType: upload.file.type,
-          }),
-        });
 
-        if (!presignResponse.ok) {
-          throw new Error('Impossibile generare la presigned URL');
-        }
-
-        const presign = await presignResponse.json();
-
-        const uploadResponse = await fetch(presign.uploadUrl, {
-          method: 'PUT',
-          headers: presign.headers,
-          body: upload.file,
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error('Upload media fallito');
-        }
-
-        const finalizeResponse = await fetch('/admin/api/media/finalize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            mediaType: 'image',
-            tmpKey: presign.key,
-            entity: 'tag',
-            entityId,
-            field: 'image',
-            filename: upload.file.name,
-            contentType: upload.file.type,
-          }),
-        });
-
-        if (!finalizeResponse.ok) {
-          throw new Error('Finalize media fallito');
-        }
-
-        const finalize = await finalizeResponse.json();
-        return finalize.media;
-      };
+      if (imageMediaRemove) {
+        data.image_media_id = null;
+      } else if (imageMediaId) {
+        data.image_media_id = imageMediaId;
+      }
 
       try {
         const response = await fetch(`/admin/api/tags/${tagId}`, {
@@ -195,16 +146,6 @@ const imageUrl = tag.image?.sizes?.s || tag.image?.sizes?.xl || '';
         });
         
         if (response.ok) {
-          if (mediaUploads.length > 0) {
-            const media = await uploadMedia(tagId, mediaUploads[0]);
-            if (media) {
-              await fetch(`/admin/api/tags/${tagId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: media }),
-              });
-            }
-          }
           updateFeedback({ 
             isLoading: false, 
             success: { 

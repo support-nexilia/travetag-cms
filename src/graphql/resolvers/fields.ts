@@ -1,6 +1,7 @@
 import * as AuthorData from '@/data/author';
 import * as TagData from '@/data/tag';
 import * as ArticleData from '@/data/article';
+import * as MediaData from '@/data/media';
 
 export const fieldResolvers = {
   Article: {
@@ -21,5 +22,52 @@ export const fieldResolvers = {
       );
       return tags.filter(Boolean);
     },
+    image: async (parent: any) => {
+      if (!parent.image_media_id) return null;
+      return await MediaData.getMediaById(parent.image_media_id.toString());
+    },
+    video_full: async (parent: any) => {
+      if (!parent.video_full_media_id) return null;
+      return await MediaData.getMediaById(parent.video_full_media_id.toString());
+    },
+    itinerary_image: async (parent: any) => {
+      if (!parent.itinerary_image_media_id) return null;
+      return await MediaData.getMediaById(parent.itinerary_image_media_id.toString());
+    },
+  },
+  Author: {
+    image: async (parent: any) => {
+      if (!parent.image_media_id) return null;
+      return await MediaData.getMediaById(parent.image_media_id.toString());
+    },
+    background_image: async (parent: any) => {
+      if (!parent.background_image_media_id) return null;
+      return await MediaData.getMediaById(parent.background_image_media_id.toString());
+    },
+  },
+  Tag: {
+    image: async (parent: any) => {
+      if (!parent.image_media_id) return null;
+      return await MediaData.getMediaById(parent.image_media_id.toString());
+    },
+  },
+  Adv: {
+    image: async (parent: any) => {
+      if (!parent.image_media_id) return null;
+      return await MediaData.getMediaById(parent.image_media_id.toString());
+    },
+  },
+  MediaFile: {
+    __resolveType: (obj: any) => {
+      if (obj?.formats) return 'MediaVideo';
+      if (obj?.sizes) return 'MediaImage';
+      if (obj?.url) return 'MediaDocument';
+      return null;
+    },
+  },
+  Media: {
+    id: (parent: any) => parent._id?.toString() || parent.id,
+    createdAt: (parent: any) => parent.created_at?.toISOString?.() || parent.createdAt,
+    updatedAt: (parent: any) => parent.updated_at?.toISOString?.() || parent.updatedAt,
   },
 };

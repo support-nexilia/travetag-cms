@@ -37,7 +37,7 @@ Modello principale per gli utenti dell'applicazione.
 | `phone` | String? | No | Numero di telefono |
 | `phone_verified` | bool? | No | Telefono verificato |
 | `fcm_token` | String? | No | Token FCM per notifiche push |
-| `image` | SizedImage? | No | Immagine profilo |
+| `image_media_id` | String? | No | ID media immagine profilo |
 
 **Proprietà calcolate:**
 - `mappedName`: Nome completo (name + surname)
@@ -80,7 +80,7 @@ Vedi [RememberItem](#rememberitem)
 | `name` | String? | No | Nome |
 | `surname` | String? | No | Cognome |
 | `nickname` | String? | No | Nickname |
-| `imageUrl` | String? | No | URL immagine profilo |
+| `image_media_id` | String? | No | ID media immagine profilo |
 | `description` | String? | No | Descrizione/biografia |
 
 ---
@@ -105,8 +105,9 @@ Modello base astratto per gli articoli. Due tipi implementati: `RememberArticle`
 | `type` | String? | Sì | Tipo articolo (REMEMBER_ME, BOOK_NOW) |
 | `categoryId` | int? | Sì | ID categoria |
 | `published_date` | TM? | Sì | Data pubblicazione (Timestamp) |
-| `image` | SizedImage? | Sì | Immagine principale |
-| `video_full` | VideoFull? | Sì | Video completo |
+| `image_media_id` | String? | Sì | ID media immagine principale |
+| `image_hero_media_id` | String? | No | ID media immagine hero |
+| `video_full_media_id` | String? | Sì | ID media video completo |
 | `slug` | String? | Sì | Slug URL-friendly |
 
 **Proprietà calcolate:**
@@ -164,7 +165,7 @@ Articolo tipo "Book Now" (viaggio prenotabile).
 | `type_of_trip_items` | Map<String, String>? | No | Mappa elementi tipo viaggio |
 | `max_booking_num` | int? | No | Numero massimo prenotazioni |
 | `prices` | Prices? | No | Struttura prezzi complessa |
-| `itinerary_image` | SizedImage? | No | Immagine itinerario |
+| `itinerary_image_media_id` | String? | No | ID media immagine itinerario |
 | `itinerary_items` | List<ItineraryItem>? | No | Lista elementi itinerario |
 
 **Proprietà calcolate:**
@@ -253,8 +254,8 @@ Prezzi per tipo viaggiatore.
 | `name` | String? | No | Nome |
 | `nickname` | String? | No | Nickname |
 | `bio` | String? | No | Biografia |
-| `image` | SizedImage? | No | Immagine profilo |
-| `background_image` | SizedImage? | No | Immagine di sfondo |
+| `image_media_id` | String? | No | ID media immagine profilo |
+| `background_image_media_id` | String? | No | ID media immagine di sfondo |
 | `social` | List<Social>? | No | Lista social network |
 | `languages` | List<String>? | No | Lingue parlate |
 
@@ -282,14 +283,13 @@ Pubblicità/promozioni.
 | Campo | Tipo | Obbligatorio | Descrizione |
 |-------|------|--------------|-------------|
 | `id` | String? | No | ID univoco |
-| `video_full` | VideoFull? | No | Video completo |
 | `title` | String? | No | Titolo |
 | `subtitle` | String? | No | Sottotitolo |
 | `author` | String? | No | Autore (deprecato) |
 | `author_id` | String? | No | ID autore |
 | `date` | TM? | No | Data |
 | `published_date` | TM? | No | Data pubblicazione |
-| `image` | SizedImage? | No | Immagine |
+| `image_media_id` | String? | No | ID media immagine |
 | `link` | String? | No | Link esterno |
 
 ---
@@ -304,7 +304,7 @@ Tag per categorizzare articoli.
 |-------|------|--------------|-------------|
 | `id` | String? | No | ID univoco tag |
 | `title` | String? | No | Titolo tag |
-| `image` | SizedImage? | No | Immagine tag |
+| `image_media_id` | String? | No | ID media immagine tag |
 
 **Proprietà calcolate:**
 - `mainPhoto`: URL immagine principale
@@ -323,7 +323,7 @@ Pagine statiche/dinamiche dell'app.
 | `subtitle` | String? | No | Sottotitolo |
 | `description` | String? | No | Descrizione |
 | `title` | String? | No | Titolo |
-| `image` | SizedImage? | No | Immagine principale |
+| `image_media_id` | String? | No | ID media immagine principale |
 | `sections` | List<PageSection>? | No | Lista sezioni (subcollezione) |
 
 **Proprietà calcolate:**
@@ -397,7 +397,7 @@ Impostazioni globali dell'applicazione.
 | `newborns_age` | TypeAge? | No | Range età neonati |
 | `children_age` | TypeAge? | No | Range età bambini |
 | `main_sections_order` | List<String>? | No | Ordine sezioni home (main, adv, chat) |
-| `video_full` | VideoFull? | No | Video principale |
+| `video_full_media_id` | String? | No | ID media video principale |
 
 ### TypeAge
 

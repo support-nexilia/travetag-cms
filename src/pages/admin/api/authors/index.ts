@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getAllAuthors, createAuthor } from '@/data/author';
 import { CreateAuthorSchema } from '@/entities/author';
+import { ObjectId } from 'mongodb';
 
 export const GET: APIRoute = async () => {
   try {
@@ -25,6 +26,12 @@ export const GET: APIRoute = async () => {
 export const POST: APIRoute = async ({ request }) => {
   try {
     const data = await request.json();
+    
+    ['image_media_id', 'background_image_media_id'].forEach((field) => {
+      if (data[field] && typeof data[field] === 'string') {
+        data[field] = new ObjectId(data[field]);
+      }
+    });
     
     // Validate data
     const validatedData = CreateAuthorSchema.parse(data);
