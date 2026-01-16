@@ -45,7 +45,7 @@ const tourLeadersData = tourLeaders.map(tl => ({
       <h1 class="text-3xl font-bold text-gray-800 mb-6">Modifica Articolo</h1>
       
       <ArticleForm
-        client:load
+        client:only="react"
         article={articleData}
         authors={authorsData}
         tourLeaders={tourLeadersData}

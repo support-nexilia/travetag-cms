@@ -65,7 +65,11 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
   };
 
   return (
-    <form id="articleForm" className="bg-white/80 backdrop-blur-md rounded-xl p-6 shadow-lg border border-white/20 space-y-6">
+    <form
+      id="articleForm"
+      className="bg-white/80 backdrop-blur-md rounded-xl p-6 shadow-lg border border-white/20 space-y-6"
+      suppressHydrationWarning
+    >
       
       {/* Hidden field for type */}
       <input type="hidden" name="type" value={articleType} />

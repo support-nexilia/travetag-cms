@@ -49,7 +49,7 @@ export function MediaPickerField({
   useEffect(() => {
     if (!initialMediaId) return;
     fetch(`/admin/api/media/${initialMediaId}`)
-      .then((res) => res.json())
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?._id) {
           setSelected(data);

@@ -37,7 +37,10 @@ export function Modal({
 }: ModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`${sizeClasses[size]} max-h-[90vh] overflow-hidden`}>
+      <DialogContent
+        className={`${sizeClasses[size]} max-h-[90vh] overflow-hidden`}
+        {...(description ? {} : { 'aria-describedby': undefined })}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}

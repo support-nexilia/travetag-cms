@@ -17,6 +17,8 @@ type MediaRecord = {
   };
   original_filename?: string;
   mime_type?: string;
+  title?: string;
+  alt?: string;
   created_at?: string;
 };
 
@@ -397,10 +399,17 @@ export function MediaLibraryModal({ isOpen, onClose, mediaType, onSelect }: Prop
               const preview = getPreviewUrl(item);
               const label = getKindLabel(item.type);
               return (
-                <button
+                <div
                   key={item._id}
-                  type="button"
                   onClick={() => onSelect(item)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      onSelect(item);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                   className="group flex flex-col gap-2 rounded-xl border border-gray-200 bg-white/90 p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#FF6B35] hover:shadow-md"
                 >
                   <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100">
@@ -455,7 +464,7 @@ export function MediaLibraryModal({ isOpen, onClose, mediaType, onSelect }: Prop
                       {item.mime_type || 'media'}
                     </span>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
