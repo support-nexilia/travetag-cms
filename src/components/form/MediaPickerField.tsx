@@ -72,18 +72,37 @@ export function MediaPickerField({
         </Button>
       </div>
       {selected && !removed ? (
-        <div className="mt-3 flex items-center gap-3">
-          {preview && mediaType === 'image' ? (
-            <img src={preview} alt="Preview" className="h-16 w-16 rounded-lg object-cover" />
-          ) : (
-            <a href={preview} target="_blank" rel="noreferrer" className="text-sm text-[#FF6B35] hover:underline">
-              Anteprima video
-            </a>
-          )}
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm">
+          <div className="flex items-center gap-3">
+            {mediaType === 'image' && preview ? (
+              <img src={preview} alt="Preview" className="h-14 w-14 rounded-md object-cover" />
+            ) : (
+              <div className="relative h-14 w-20 rounded-md bg-gradient-to-br from-gray-900 via-gray-700 to-gray-900 text-white shadow-inner">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide">
+                    Video
+                  </span>
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-lg">▶</span>
+                </div>
+              </div>
+            )}
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold text-gray-700">
+                {mediaType === 'video' ? 'Video selezionato' : 'Immagine selezionata'}
+              </span>
+              {mediaType === 'video' && preview ? (
+                <a href={preview} target="_blank" rel="noreferrer" className="text-xs text-[#FF6B35] hover:underline">
+                  Apri anteprima
+                </a>
+              ) : null}
+            </div>
+          </div>
           <button
             type="button"
             onClick={() => setRemoved(true)}
-            className="text-xs font-medium text-gray-500 hover:text-gray-700"
+            className="text-xs font-semibold text-gray-500 hover:text-gray-700"
           >
             Rimuovi
           </button>
