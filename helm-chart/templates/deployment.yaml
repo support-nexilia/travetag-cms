@@ -1,0 +1,43 @@
+# traveltag-cms-chart/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "helm-chart.fullname" . }}-app
+  labels:
+    {{- include "helm-chart.labels" . | nindent 4 }}
+    component: app
+spec:
+  replicas: {{ .Values.app.replicas | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "helm-chart.selectorLabels" . | nindent 6 }}
+      component: app
+  template:
+    metadata:
+      labels:
+        {{- include "helm-chart.selectorLabels" . | nindent 8 }}
+        component: app
+        service_name: {{ include "helm-chart.fullname" . }}-app
+      annotations:
+        kubectl.kubernetes.io/restartedAt: {{ now | unixEpoch | quote }}
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecrets }}
+      {{- end }}
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: ENABLE_WORKER
+          value: "false"
+        ports:
+        - name: http
+          containerPort: {{ .Values.service.targetPort }}
+          protocol: TCP
+        envFrom:
+        - secretRef:
+            name: {{ .Values.envSecretName }}
+        resources:
+          {{- toYaml .Values.app.resources | nindent 10 }}

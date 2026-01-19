@@ -1,0 +1,56 @@
+name: Build & Push Docker image to GHCR (multiarch)
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ vars.GHCR_USERNAME }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image (multiarch)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/your-org/traveltag-cms:dev
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Set up kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG_V2 }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Helm upgrade --install
+        run: |
+          helm upgrade --install traveltag-cms ./helm-chart \
+            --namespace taveltag-dev \
+            --create-namespace \
+            --set image.tag=dev \
+            --set ingress.host=traveltag-cms-dev.kubernetes-2.nexilia.be \
+            --set env=dev \
+            --set envSecretName=traveltag-cms-dev-env-secret

@@ -1,0 +1,40 @@
+{{- if .Values.worker.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "helm-chart.fullname" . }}-worker
+  labels:
+    {{- include "helm-chart.labels" . | nindent 4 }}
+    component: worker
+spec:
+  replicas: {{ .Values.worker.replicas | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "helm-chart.selectorLabels" . | nindent 6 }}
+      component: worker
+  template:
+    metadata:
+      labels:
+        {{- include "helm-chart.selectorLabels" . | nindent 8 }}
+        component: worker
+        service_name: {{ include "helm-chart.fullname" . }}-worker
+      annotations:
+        kubectl.kubernetes.io/restartedAt: {{ now | unixEpoch | quote }}
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecrets }}
+      {{- end }}
+      containers:
+      - name: {{ .Chart.Name }}-worker
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: ENABLE_WORKER
+          value: "true"
+        envFrom:
+        - secretRef:
+            name: {{ .Values.envSecretName }}
+        resources:
+          {{- toYaml .Values.worker.resources | nindent 10 }}
+{{- end }}
