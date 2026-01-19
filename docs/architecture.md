@@ -206,43 +206,6 @@ Push notifications management for mobile app.
 - Actual sending handled via Firebase Cloud Messaging (FCM)
 - User FCM tokens stored in `users` collection
 
-## Cron System
-
-### Functionality
-The cron system manages automatic publication of scheduled Posts and Advs.
-
-### Components
-
-**Service (`src/services/cron.ts`)**:
-- `publishScheduledContent()` - Main function that finds and publishes content with status=PLANNED and date <= now
-- `triggerPublishNow()` - Manual trigger for testing
-
-**API Endpoint (`src/pages/api/cron/trigger.ts`)**:
-- POST `/api/cron/trigger` - Manual trigger (admin only)
-- Returns number of posts and advs published
-
-**UI Dashboard (`src/pages/cron.astro`)**:
-- Displays all scheduled posts and advs
-- Button to manually execute publication
-- Highlights content with past dates (ready to publish)
-
-### Behavior
-1. When Posts/Advs are created/modified with `status=PLANNED`:
-   - The publication plan is logged
-   - Content remains waiting until scheduled date
-
-2. The cron service (to be executed periodically, e.g., every minute):
-   - Searches for Posts/Advs with `status=PLANNED` and `date <= NOW()`
-   - Changes status to `PUBLISHED`
-   - Logs successful publication
-
-3. Admin dashboard:
-   - Shows all scheduled content
-   - Allows manual execution
-   - Highlights content ready for publication
-
-**Note**: In production, configure a system cron job or scheduled service (e.g., vercel-cron) to periodically call `/api/cron/trigger`.
-
 ## Data Model Reference
 
 See detailed model documentation:
@@ -253,7 +216,6 @@ See detailed model documentation:
 
 **Post Notes**:
 - Future date → `status = 'planned'`
-- Cron system automatically publishes when scheduled date is reached
 - Slug auto-generated from title if not specified
 - Only admins can modify `user_id` (assign to other users)
 

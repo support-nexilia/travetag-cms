@@ -1,5 +1,8 @@
 import { defineMiddleware } from 'astro:middleware';
 import { getSession } from '@/lib/session';
+import { registerCronEventListeners } from '@/services/cron-events';
+
+registerCronEventListeners();
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;

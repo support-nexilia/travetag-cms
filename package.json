@@ -3,10 +3,11 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "ENABLE_WORKER=true astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "worker": "ENABLE_WORKER=true tsx src/workers/startup.ts"
   },
   "dependencies": {
     "@apollo/client": "^4.0.11",
@@ -37,6 +38,7 @@
     "autoprefixer": "^10.4.23",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "eventemitter2": "^6.4.9",
     "graphiql": "^5.2.2",
     "graphql": "^16.12.0",
     "graphql-playground-react": "^1.7.28",
@@ -54,11 +56,11 @@
     "redux": "^5.0.1",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",
-    "zod": "^4.3.5"
+    "zod": "^4.3.5",
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
     "dotenv": "^17.2.3",
-    "tsx": "^4.21.0",
     "tw-animate-css": "^1.4.0"
   }
 }

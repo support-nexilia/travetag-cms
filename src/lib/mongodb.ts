@@ -46,4 +46,5 @@ export const collections = {
   categories: db.collection('categories'),
   users: db.collection('users'),
   media: db.collection('media'),
+  cronJobs: db.collection('cron_jobs'),
 } as const;

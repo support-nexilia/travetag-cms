@@ -6,5 +6,5 @@ export * from './tag';
 export * from './adv';
 export * from './app-settings';
 export * from './notification';
-export * from './cronjob';
 export * from './media';
+export * from './cron-job';

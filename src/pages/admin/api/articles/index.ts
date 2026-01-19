@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { getAllArticles, createArticle } from '@/data/article';
 import { CreateArticleSchema } from '@/entities/article';
 import { getSession, isAdmin } from '@/lib/session';
-import { ObjectId } from 'mongodb';
+import { applyNullFields, normalizeArticleInput } from '@/utils/article-input';
 
 export const GET: APIRoute = async ({ cookies }) => {
   try {
@@ -37,18 +37,11 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       data.namespace = session.namespace;
     }
 
-    // Convert media ids to ObjectId
-    const mediaFields = ['image_media_id', 'image_hero_media_id', 'video_full_media_id', 'itinerary_image_media_id'];
-    mediaFields.forEach((field) => {
-      if (data[field] && typeof data[field] === 'string') {
-        data[field] = new ObjectId(data[field]);
-      }
-    });
+    const normalized = normalizeArticleInput(data);
+    const validatedData = CreateArticleSchema.parse(normalized.data);
+    const payload = applyNullFields(validatedData, normalized.nullFields);
     
-    // Validate data
-    const validatedData = CreateArticleSchema.parse(data);
-    
-    const article = await createArticle(validatedData);
+    const article = await createArticle(payload);
     
     return new Response(JSON.stringify(article), {
       status: 201,
@@ -63,6 +56,18 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return new Response(JSON.stringify({ 
         error: 'Validation error', 
         details: error.errors 
+      }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+
+    if (error.name === 'ValidationError') {
+      return new Response(JSON.stringify({ 
+        error: 'Validation error',
+        message: error.message,
       }), {
         status: 400,
         headers: {

@@ -1,6 +1,7 @@
 import { collections } from '@/lib/mongodb';
 import type { Article, CreateArticle, UpdateArticle } from '@/entities/article';
 import { ObjectId } from 'mongodb';
+import { eventEmitter } from '@/services/events';
 
 export async function getAllArticles(namespace?: string) {
   const filter: any = {};
@@ -25,12 +26,12 @@ export async function getPublishedArticles(namespace?: string) {
 }
 
 export async function getArticleById(id: string) {
-  if (!ObjectId.isValid(id)) {
-    return null;
-  }
-  return await collections.articles.findOne({ 
-    _id: new ObjectId(id) 
-  }) as Article | null;
+  const isObjectId = ObjectId.isValid(id);
+  const query = isObjectId
+    ? { $or: [{ _id: new ObjectId(id) }, { _id: id }] }
+    : { _id: id };
+
+  return await collections.articles.findOne(query) as Article | null;
 }
 
 export async function getArticleBySlug(slug: string) {
@@ -85,16 +86,28 @@ export async function createArticle(data: CreateArticle) {
     updated_at: now,
   });
   
-  return await getArticleById(result.insertedId.toString());
+  const article = await getArticleById(result.insertedId.toString());
+
+  if (article) {
+    eventEmitter.emit('article:created', {
+      articleId: article._id.toString(),
+      published: article.published,
+      publishedDate: article.published_date,
+      status: (article as { status?: 'DRAFT' | 'PUBLISHED' }).status,
+    });
+  }
+
+  return article;
 }
 
 export async function updateArticle(id: string, data: UpdateArticle) {
-  if (!ObjectId.isValid(id)) {
-    return null;
-  }
-  
+  const isObjectId = ObjectId.isValid(id);
+  const query = isObjectId
+    ? { $or: [{ _id: new ObjectId(id) }, { _id: id }] }
+    : { _id: id };
+
   const result = await collections.articles.findOneAndUpdate(
-    { _id: new ObjectId(id) },
+    query,
     { 
       $set: {
         ...data,
@@ -104,19 +117,41 @@ export async function updateArticle(id: string, data: UpdateArticle) {
     { returnDocument: 'after' }
   );
   
-  return result as Article | null;
+  const resultDoc = (result as { value?: Article | null } | null);
+  const article = (resultDoc?.value ?? result) as Article | null;
+
+  if (article) {
+    eventEmitter.emit('article:updated', {
+      articleId: article._id.toString(),
+      published: article.published,
+      publishedDate: article.published_date,
+      status: (article as { status?: 'DRAFT' | 'PUBLISHED' }).status,
+    });
+  }
+
+  return article;
 }
 
 export async function deleteArticle(id: string) {
-  if (!ObjectId.isValid(id)) {
-    return null;
-  }
-  
+  const isObjectId = ObjectId.isValid(id);
+  const query = isObjectId
+    ? { $or: [{ _id: new ObjectId(id) }, { _id: id }] }
+    : { _id: id };
+
   const result = await collections.articles.findOneAndDelete({ 
-    _id: new ObjectId(id) 
+    ...query,
   });
-  
-  return result as Article | null;
+
+  const resultDoc = (result as { value?: Article | null } | null);
+  const article = (resultDoc?.value ?? result) as Article | null;
+
+  if (article) {
+    eventEmitter.emit('article:deleted', {
+      articleId: article._id.toString(),
+    });
+  }
+
+  return article;
 }
 
 export async function publishArticle(id: string) {

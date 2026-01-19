@@ -29,3 +29,10 @@ export function toISODateTimeLocal(date: Date | string): string {
   const adjusted = new Date(d.getTime() - offset * 60 * 1000);
   return adjusted.toISOString().slice(0, 16);
 }
+
+export function toISODateLocal(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const offset = d.getTimezoneOffset();
+  const adjusted = new Date(d.getTime() - offset * 60 * 1000);
+  return adjusted.toISOString().split('T')[0];
+}

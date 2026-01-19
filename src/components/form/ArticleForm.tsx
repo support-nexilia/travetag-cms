@@ -10,6 +10,7 @@ import RichTextEditor from './RichTextEditor';
 import { MediaPickerField } from './MediaPickerField';
 import { Tabs } from '@/components/ui/tabs';
 import { Wizard } from '@/components/ui/wizard';
+import { toISODateLocal, toISODateTimeLocal } from '@/utils/date';
 
 interface Author {
   _id: string;
@@ -44,6 +45,9 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
   const [articleType, setArticleType] = useState<'REMEMBER' | 'BOOK_NOW'>(
     article?.type || 'REMEMBER'
   );
+  const [publishedAt, setPublishedAt] = useState<Date>(() =>
+    article?.published_date ? new Date(article.published_date) : new Date()
+  );
   const [travelersConfig, setTravelersConfig] = useState({
     adults: article?.travelers_adults_allowed ?? true,
     children: article?.travelers_children_allowed ?? false,
@@ -56,6 +60,7 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
 
   const isBookNow = articleType === 'BOOK_NOW';
   const isRemember = articleType === 'REMEMBER';
+  const isScheduled = publishedAt.getTime() > Date.now();
 
   // Auto-generate slug from title
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,6 +128,42 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
     <>
       {typeSelector}
       <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="published_date" className="block text-sm font-medium text-gray-700 mb-2">
+            Data Pubblicazione *
+          </label>
+          <input
+            type="datetime-local"
+            id="published_date"
+            name="published_date"
+            defaultValue={toISODateTimeLocal(article?.published_date ?? new Date())}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value) {
+                setPublishedAt(new Date(value));
+              }
+            }}
+            required
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+            Stato *
+          </label>
+          <select
+            id="status"
+            name="status"
+            defaultValue={article?.status || 'DRAFT'}
+            required
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+          >
+            <option value="DRAFT">Bozza</option>
+            <option value="PUBLISHED">{isScheduled ? 'Pianifica' : 'Pubblicato'}</option>
+          </select>
+        </div>
+
         <div className="col-span-2">
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
             Titolo *
@@ -215,6 +256,7 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
         />
       </div>
+
     </>
   );
 
@@ -242,38 +284,6 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
           mediaType="video"
           initialMediaId={article?.video_full_media_id}
         />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="published_date" className="block text-sm font-medium text-gray-700 mb-2">
-            Data Pubblicazione *
-          </label>
-          <input
-            type="date"
-            id="published_date"
-            name="published_date"
-            defaultValue={article?.published_date ? new Date(article.published_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
-            Stato *
-          </label>
-          <select
-            id="status"
-            name="status"
-            defaultValue={article?.status || 'DRAFT'}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
-          >
-            <option value="DRAFT">Bozza</option>
-            <option value="PUBLISHED">Pubblicato</option>
-          </select>
-        </div>
       </div>
     </>
   );
@@ -314,7 +324,7 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
           type="date"
           id="date"
           name="date"
-          defaultValue={article?.date ? new Date(article.date).toISOString().split('T')[0] : ''}
+          defaultValue={article?.date ? toISODateLocal(article.date) : ''}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
         />
       </div>
@@ -357,26 +367,26 @@ export function ArticleForm({ article, authors, tourLeaders, mode }: Props) {
           <label htmlFor="trip_start_at" className="block text-sm font-medium text-gray-700 mb-2">
             Data Inizio Viaggio
           </label>
-          <input
-            type="date"
-            id="trip_start_at"
-            name="trip_start_at"
-            defaultValue={article?.trip_start_at ? new Date(article.trip_start_at).toISOString().split('T')[0] : ''}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
-          />
+        <input
+          type="date"
+          id="trip_start_at"
+          name="trip_start_at"
+          defaultValue={article?.trip_start_at ? toISODateLocal(article.trip_start_at) : ''}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+        />
         </div>
 
         <div>
           <label htmlFor="trip_end_at" className="block text-sm font-medium text-gray-700 mb-2">
             Data Fine Viaggio
           </label>
-          <input
-            type="date"
-            id="trip_end_at"
-            name="trip_end_at"
-            defaultValue={article?.trip_end_at ? new Date(article.trip_end_at).toISOString().split('T')[0] : ''}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
-          />
+        <input
+          type="date"
+          id="trip_end_at"
+          name="trip_end_at"
+          defaultValue={article?.trip_end_at ? toISODateLocal(article.trip_end_at) : ''}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+        />
         </div>
       </div>
 

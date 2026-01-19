@@ -104,6 +104,10 @@ class ImageNode extends DecoratorNode<JSX.Element> {
     if (!this.__src) return null;
     return (
       <ImageComponent
+        src={this.__src}
+        alt={this.__altText}
+        width={this.__width}
+        align={this.__align}
         nodeKey={this.getKey()}
       />
     );
@@ -213,54 +217,20 @@ const $getSelectedImageNode = (): ImageNode | null => {
 };
 
 const ImageComponent = ({
+  src,
+  alt,
+  width,
+  align,
   nodeKey,
 }: {
+  src: string;
+  alt: string;
+  width: number | null;
+  align: 'left' | 'center' | 'right';
   nodeKey: NodeKey;
 }) => {
   const [editor] = useLexicalComposerContext();
   const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(nodeKey);
-  const [imageState, setImageState] = useState<{
-    src: string;
-    alt: string;
-    width: number | null;
-    align: 'left' | 'center' | 'right';
-  } | null>(null);
-
-  useEffect(() => {
-    const unregister = editor.registerUpdateListener(({ editorState }) => {
-      editorState.read(() => {
-        const node = $getNodeByKey(nodeKey);
-        if ($isImageNode(node)) {
-          const newState = {
-            src: node.__src,
-            alt: node.__altText,
-            width: node.getWidth(),
-            align: node.getAlign(),
-          };
-          setImageState(newState);
-        }
-      });
-    });
-
-    // Initial read
-    editor.getEditorState().read(() => {
-      const node = $getNodeByKey(nodeKey);
-      if ($isImageNode(node)) {
-        setImageState({
-          src: node.__src,
-          alt: node.__altText,
-          width: node.getWidth(),
-          align: node.getAlign(),
-        });
-      }
-    });
-
-    return unregister;
-  }, [editor, nodeKey]);
-
-  if (!imageState) return null;
-
-  const { src, alt, width, align } = imageState;
 
   return (
     <span className="block max-w-full">
